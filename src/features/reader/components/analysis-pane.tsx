@@ -48,7 +48,7 @@ export function AnalysisPane({ sentence }: AnalysisPaneProps) {
           <TabsTrigger value="explanation" className="text-xs">Explain</TabsTrigger>
         </TabsList>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4">
             <TabsContent value="translation" className="mt-0">
               <TranslationCard sentence={sentence} />
