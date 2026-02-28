@@ -36,7 +36,7 @@ export function ReaderPane() {
 
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-[65ch] px-6 py-10">
+      <div className="mx-auto max-w-4xl px-6 py-10">
         <div className="font-serif text-lg leading-[1.8] text-[var(--reading-fg)]"
              style={{ background: "var(--reading-bg)", margin: "-1.5rem", padding: "1.5rem", borderRadius: "0.5rem" }}>
           {sentences.map((sentence, i) => (
