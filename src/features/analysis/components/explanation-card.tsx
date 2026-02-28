@@ -35,10 +35,10 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
     return (
       <div className="flex flex-col items-center py-6 text-center">
         <p className="text-sm text-muted-foreground mb-3">
-          Click to get a detailed explanation
+          点击获取详细讲解
         </p>
         <Button onClick={handleAnalyze} size="sm" className="gap-2">
-          Explain Sentence
+          逐句讲解
         </Button>
       </div>
     )
@@ -48,7 +48,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Generating explanation...</span>
+        <span className="ml-2 text-sm text-muted-foreground">生成讲解中...</span>
       </div>
     )
   }
@@ -60,7 +60,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
         <p className="text-sm text-destructive mb-1">{result.errorMessage}</p>
         <Button onClick={handleAnalyze} size="sm" variant="outline" className="gap-2 mt-2">
           <RefreshCw className="h-3.5 w-3.5" />
-          Retry
+          重试
         </Button>
       </div>
     )
@@ -77,7 +77,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
 
       {data.grammarPoints && data.grammarPoints.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Grammar Points</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">语法要点</h4>
           <div className="space-y-2.5">
             {data.grammarPoints.map((p, i) => (
               <div key={i} className="rounded-md bg-muted/50 p-2.5">
@@ -98,7 +98,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
         <>
           <Separator />
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Vocabulary</h4>
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">核心词汇</h4>
             <div className="space-y-2">
               {data.vocabulary.map((v, i) => (
                 <div key={i} className="flex flex-col gap-0.5">
@@ -121,7 +121,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
         <>
           <Separator />
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Expression Tips</h4>
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">表达技巧</h4>
             <ul className="space-y-1">
               {data.expressionTips.map((tip, i) => (
                 <li key={i} className="text-sm flex gap-2">
@@ -138,7 +138,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
         <>
           <Separator />
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Common Pitfalls</h4>
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">易错点</h4>
             <ul className="space-y-1">
               {data.pitfalls.map((p, i) => (
                 <li key={i} className="text-sm flex gap-2">
@@ -155,10 +155,10 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
         <>
           <Separator />
           <div className="rounded-md bg-primary/5 p-3">
-            <h4 className="text-xs font-medium mb-2">Practice</h4>
+            <h4 className="text-xs font-medium mb-2">练一练</h4>
             <p className="text-sm mb-2">{data.practice.question}</p>
             <details className="text-sm text-muted-foreground">
-              <summary className="cursor-pointer text-primary text-xs">Show answer</summary>
+              <summary className="cursor-pointer text-primary text-xs">查看答案</summary>
               <p className="mt-1.5">{data.practice.referenceAnswer}</p>
             </details>
           </div>
@@ -167,7 +167,7 @@ export function ExplanationCard({ sentence }: ExplanationCardProps) {
 
       <Button onClick={handleAnalyze} size="sm" variant="ghost" className="gap-2 text-xs">
         <RefreshCw className="h-3 w-3" />
-        Re-analyze
+        重新分析
       </Button>
     </div>
   )

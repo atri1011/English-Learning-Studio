@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { Plus, Trash2, Check, Loader2, ArrowLeft } from "lucide-react"
+import { useEffect, useState, useRef } from "react"
+import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useSettingsStore } from "@/stores/settings-store"
 import { testConnection } from "@/lib/api/openai-compatible-client"
+import { exportBackup, downloadBackup, importBackup } from "@/lib/db/backup"
 import { toast } from "sonner"
 
 export function SettingsPage() {
@@ -23,6 +24,8 @@ export function SettingsPage() {
 
   const [showForm, setShowForm] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const importRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     name: "",
     baseURL: "",
@@ -38,13 +41,13 @@ export function SettingsPage() {
 
   const handleAdd = async () => {
     if (!form.name || !form.baseURL || !form.apiKey || !form.model) {
-      toast.error("Please fill all required fields")
+      toast.error("请填写所有必填项")
       return
     }
     await addProfile(form)
     setForm({ name: "", baseURL: "", apiKey: "", model: "", temperature: 0.3, maxTokens: 2000 })
     setShowForm(false)
-    toast.success("API profile added")
+    toast.success("已添加 API 配置")
   }
 
   const handleTest = async (baseURL: string, apiKey: string, model: string) => {
@@ -52,9 +55,9 @@ export function SettingsPage() {
     const result = await testConnection(baseURL, apiKey, model)
     setTesting(false)
     if (result.success) {
-      toast.success("Connection successful")
+      toast.success("连接成功")
     } else {
-      toast.error(result.error || "Connection failed")
+      toast.error(result.error || "连接失败")
     }
   }
 
@@ -67,9 +70,9 @@ export function SettingsPage() {
           </Button>
         </Link>
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Settings</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">设置</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure your OpenAI-compatible API profiles
+            配置 OpenAI 兼容的 API 接口
           </p>
         </div>
       </div>
@@ -83,7 +86,7 @@ export function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-base">{profile.name}</CardTitle>
                   {profile.id === activeProfileId && (
-                    <Badge variant="default" className="text-xs">Active</Badge>
+                    <Badge variant="default" className="text-xs">使用中</Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
@@ -94,7 +97,7 @@ export function SettingsPage() {
                       onClick={() => setActiveProfile(profile.id)}
                     >
                       <Check className="h-3.5 w-3.5 mr-1" />
-                      Set Active
+                      启用
                     </Button>
                   )}
                   <Button
@@ -103,7 +106,7 @@ export function SettingsPage() {
                     className="text-destructive"
                     onClick={() => {
                       deleteProfile(profile.id)
-                      toast.success("Profile deleted")
+                      toast.success("已删除")
                     }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -128,7 +131,7 @@ export function SettingsPage() {
                   {testing ? (
                     <Loader2 className="h-3 w-3 animate-spin mr-1" />
                   ) : null}
-                  Test Connection
+                  测试连接
                 </Button>
               </div>
             </CardContent>
@@ -140,7 +143,7 @@ export function SettingsPage() {
         <Card className="mb-6">
           <CardContent className="flex flex-col items-center py-8 text-center">
             <p className="text-sm text-muted-foreground mb-4">
-              No API profiles configured. Add one to start using AI analysis.
+              尚未配置 API。添加一个即可开始使用 AI 分析。
             </p>
           </CardContent>
         </Card>
@@ -150,29 +153,29 @@ export function SettingsPage() {
       {showForm ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Add API Profile</CardTitle>
+            <CardTitle className="text-base">添加 API 配置</CardTitle>
             <CardDescription>
-              Configure an OpenAI-compatible API endpoint
+              配置一个 OpenAI 兼容的 API 端点
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Profile Name *</Label>
+              <Label>配置名称 *</Label>
               <Input
-                placeholder="e.g. OpenAI, DeepSeek, Local LLM"
+                placeholder="如 OpenAI、DeepSeek、本地模型"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>API Base URL *</Label>
+              <Label>API 地址 *</Label>
               <Input
                 placeholder="https://api.openai.com"
                 value={form.baseURL}
                 onChange={(e) => setForm({ ...form, baseURL: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                The base URL without /v1/chat/completions
+                填写基础地址，无需包含 /v1/chat/completions
               </p>
             </div>
             <div className="space-y-2">
@@ -185,9 +188,9 @@ export function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Model *</Label>
+              <Label>模型 *</Label>
               <Input
-                placeholder="e.g. gpt-4o, deepseek-chat"
+                placeholder="如 gpt-4o、deepseek-chat"
                 value={form.model}
                 onChange={(e) => setForm({ ...form, model: e.target.value })}
               />
@@ -208,7 +211,7 @@ export function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Max Tokens</Label>
+                <Label>最大 Tokens</Label>
                 <Input
                   type="number"
                   min={100}
@@ -223,18 +226,79 @@ export function SettingsPage() {
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setShowForm(false)}>
-                Cancel
+                取消
               </Button>
-              <Button onClick={handleAdd}>Add Profile</Button>
+              <Button onClick={handleAdd}>添加</Button>
             </div>
           </CardContent>
         </Card>
       ) : (
         <Button onClick={() => setShowForm(true)} variant="outline" className="w-full gap-2">
           <Plus className="h-4 w-4" />
-          Add API Profile
+          添加 API 配置
         </Button>
       )}
+
+      {/* Data Management */}
+      <Separator className="my-8" />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">数据管理</CardTitle>
+          <CardDescription>
+            导出或恢复文章、分析结果和 API 配置
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            className="gap-2"
+            disabled={exporting}
+            onClick={async () => {
+              setExporting(true)
+              try {
+                const json = await exportBackup()
+                downloadBackup(json)
+                toast.success("备份已导出")
+              } catch {
+                toast.error("导出失败")
+              }
+              setExporting(false)
+            }}
+          >
+            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            导出备份
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => importRef.current?.click()}
+          >
+            <Upload className="h-4 w-4" />
+            恢复备份
+          </Button>
+          <input
+            ref={importRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              try {
+                const result = await importBackup(file)
+                await loadProfiles()
+                toast.success(`已恢复 ${result.articles} 篇文章、${result.sentences} 个句子`)
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "恢复失败")
+              }
+              if (importRef.current) importRef.current.value = ""
+            }}
+          />
+          <p className="w-full text-xs text-muted-foreground mt-1">
+            备份包含 API Key，请妥善保管导出文件。
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

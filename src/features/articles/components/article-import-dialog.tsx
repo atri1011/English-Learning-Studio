@@ -32,7 +32,7 @@ export function ArticleImportDialog({ open, onOpenChange }: ArticleImportDialogP
 
   const handlePasteSubmit = async () => {
     if (!text.trim()) {
-      toast.error("Please paste some text")
+      toast.error("请粘贴一些文本")
       return
     }
     setLoading(true)
@@ -48,13 +48,13 @@ export function ArticleImportDialog({ open, onOpenChange }: ArticleImportDialogP
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.name.endsWith(".txt")) {
-      toast.error("Only .txt files are supported")
+      toast.error("仅支持 .txt 文件")
       return
     }
     setLoading(true)
     const content = await file.text()
     if (!content.trim()) {
-      toast.error("File is empty")
+      toast.error("文件内容为空")
       setLoading(false)
       return
     }
@@ -76,18 +76,18 @@ export function ArticleImportDialog({ open, onOpenChange }: ArticleImportDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import Article</DialogTitle>
+          <DialogTitle>导入文章</DialogTitle>
           <DialogDescription>
-            Paste English text or upload a .txt file to start learning.
+            粘贴英文文本或上传 .txt 文件，开始学习。
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title (optional)</Label>
+            <Label htmlFor="title">标题（可选）</Label>
             <Input
               id="title"
-              placeholder="Auto-generated from content if empty"
+              placeholder="留空则自动从内容生成"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -95,13 +95,13 @@ export function ArticleImportDialog({ open, onOpenChange }: ArticleImportDialogP
 
           <Tabs defaultValue="paste">
             <TabsList className="w-full">
-              <TabsTrigger value="paste" className="flex-1">Paste Text</TabsTrigger>
-              <TabsTrigger value="upload" className="flex-1">Upload File</TabsTrigger>
+              <TabsTrigger value="paste" className="flex-1">粘贴文本</TabsTrigger>
+              <TabsTrigger value="upload" className="flex-1">上传文件</TabsTrigger>
             </TabsList>
 
             <TabsContent value="paste" className="space-y-3 mt-3">
               <Textarea
-                placeholder="Paste your English article here..."
+                placeholder="在此粘贴英文文章..."
                 className="min-h-[200px] max-h-[50vh] font-serif text-base leading-relaxed"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -111,7 +111,7 @@ export function ArticleImportDialog({ open, onOpenChange }: ArticleImportDialogP
                   onClick={handlePasteSubmit}
                   disabled={loading || !text.trim()}
                 >
-                  {loading ? "Importing..." : "Import & Read"}
+                  {loading ? "导入中..." : "导入并阅读"}
                 </Button>
               </DialogFooter>
             </TabsContent>
@@ -123,7 +123,7 @@ export function ArticleImportDialog({ open, onOpenChange }: ArticleImportDialogP
               >
                 <Upload className="h-8 w-8 text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  Click to select a .txt file
+                  点击选择 .txt 文件
                 </p>
                 <input
                   ref={fileRef}

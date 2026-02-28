@@ -30,10 +30,10 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
     return (
       <div className="flex flex-col items-center py-6 text-center">
         <p className="text-sm text-muted-foreground mb-3">
-          Click to generate Chinese translation
+          点击生成中文翻译
         </p>
         <Button onClick={handleAnalyze} size="sm" className="gap-2">
-          Translate
+          翻译
         </Button>
       </div>
     )
@@ -43,7 +43,7 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Translating...</span>
+        <span className="ml-2 text-sm text-muted-foreground">翻译中...</span>
       </div>
     )
   }
@@ -55,7 +55,7 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
         <p className="text-sm text-destructive mb-1">{result.errorMessage}</p>
         <Button onClick={handleAnalyze} size="sm" variant="outline" className="gap-2 mt-2">
           <RefreshCw className="h-3.5 w-3.5" />
-          Retry
+          重试
         </Button>
       </div>
     )
@@ -67,20 +67,20 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Translation</h4>
+        <h4 className="text-xs font-medium text-muted-foreground mb-1.5">意译</h4>
         <p className="text-sm leading-relaxed">{data.translationZh}</p>
       </div>
 
       {data.literalZh && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Literal Translation</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">直译</h4>
           <p className="text-sm leading-relaxed text-muted-foreground">{data.literalZh}</p>
         </div>
       )}
 
       {data.alignments && data.alignments.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Phrase Alignment</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">短语对照</h4>
           <div className="space-y-1.5">
             {data.alignments.map((a, i) => (
               <div key={i} className="flex items-start gap-2 text-sm">
@@ -98,7 +98,7 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
 
       <Button onClick={handleAnalyze} size="sm" variant="ghost" className="gap-2 text-xs">
         <RefreshCw className="h-3 w-3" />
-        Re-analyze
+        重新分析
       </Button>
     </div>
   )

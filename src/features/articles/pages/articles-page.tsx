@@ -1,32 +1,37 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Plus, BookOpen } from "lucide-react"
+import { useNavigate, Link } from "react-router-dom"
+import { Plus, BookOpen, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useArticleStore } from "@/stores/article-store"
+import { useSettingsStore } from "@/stores/settings-store"
 import { ArticleCard } from "../components/article-card"
 import { ArticleImportDialog } from "../components/article-import-dialog"
 
 export function ArticlesPage() {
   const navigate = useNavigate()
   const { articles, loading, loadArticles } = useArticleStore()
+  const { profiles, loadProfiles } = useSettingsStore()
   const [importOpen, setImportOpen] = useState(false)
 
   useEffect(() => {
     loadArticles()
-  }, [loadArticles])
+    loadProfiles()
+  }, [loadArticles, loadProfiles])
+
+  const hasApiProfile = profiles.length > 0
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">My Articles</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">我的文章</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Import English articles and learn with AI analysis
+            导入英文文章，借助 AI 逐句分析学习
           </p>
         </div>
         <Button onClick={() => setImportOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Article
+          添加文章
         </Button>
       </div>
 
@@ -44,13 +49,27 @@ export function ArticlesPage() {
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
             <BookOpen className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium mb-2">No articles yet</h3>
+          <h3 className="text-lg font-medium mb-2">还没有文章</h3>
           <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-            Import an English article to start learning. You can paste text or upload a .txt file.
+            导入一篇英文文章开始学习，支持粘贴文本或上传 .txt 文件。
           </p>
+          {!hasApiProfile && (
+            <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 mb-4 max-w-sm">
+              <p className="text-sm font-medium mb-2">需要先完成配置</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                请先配置 AI API，才能使用句子分析功能。
+              </p>
+              <Link to="/settings">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings className="h-3.5 w-3.5" />
+                  前往设置
+                </Button>
+              </Link>
+            </div>
+          )}
           <Button onClick={() => setImportOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Import Your First Article
+            导入第一篇文章
           </Button>
         </div>
       ) : (

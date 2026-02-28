@@ -61,16 +61,23 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       deleteProfile: async (id) => {
-        await db.apiProfiles.delete(id)
-        set((s) => {
-          const remaining = s.profiles.filter((p) => p.id !== id)
-          const needNewActive = s.activeProfileId === id
-          return {
-            profiles: remaining,
-            activeProfileId: needNewActive
-              ? remaining[0]?.id ?? null
-              : s.activeProfileId,
+        const { activeProfileId, profiles } = get()
+        const remaining = profiles.filter((p) => p.id !== id)
+        const needNewActive = activeProfileId === id
+        const newActiveId = needNewActive ? remaining[0]?.id ?? null : activeProfileId
+
+        await db.transaction("rw", db.apiProfiles, async () => {
+          await db.apiProfiles.delete(id)
+          if (needNewActive && newActiveId) {
+            await db.apiProfiles.update(newActiveId, { isActive: 1, updatedAt: Date.now() })
           }
+        })
+
+        set({
+          profiles: remaining.map((p) =>
+            p.id === newActiveId ? { ...p, isActive: 1 as number } : p,
+          ),
+          activeProfileId: newActiveId,
         })
       },
 

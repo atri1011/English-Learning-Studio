@@ -33,10 +33,10 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
     return (
       <div className="flex flex-col items-center py-6 text-center">
         <p className="text-sm text-muted-foreground mb-3">
-          Click to analyze grammar structure
+          点击分析语法结构
         </p>
         <Button onClick={handleAnalyze} size="sm" className="gap-2">
-          Analyze Grammar
+          分析语法
         </Button>
       </div>
     )
@@ -46,7 +46,7 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Analyzing grammar...</span>
+        <span className="ml-2 text-sm text-muted-foreground">分析语法中...</span>
       </div>
     )
   }
@@ -58,7 +58,7 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
         <p className="text-sm text-destructive mb-1">{result.errorMessage}</p>
         <Button onClick={handleAnalyze} size="sm" variant="outline" className="gap-2 mt-2">
           <RefreshCw className="h-3.5 w-3.5" />
-          Retry
+          重试
         </Button>
       </div>
     )
@@ -70,18 +70,18 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Summary</h4>
+        <h4 className="text-xs font-medium text-muted-foreground mb-1.5">概要</h4>
         <p className="text-sm leading-relaxed">{data.summary}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
         <Badge variant="secondary">{data.tense?.label || data.tense?.primary}</Badge>
-        <Badge variant="outline">{data.voice === "passive" ? "Passive Voice" : "Active Voice"}</Badge>
+        <Badge variant="outline">{data.voice === "passive" ? "被动语态" : "主动语态"}</Badge>
       </div>
 
       {data.clauses && data.clauses.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Clause Analysis</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">子句分析</h4>
           <div className="space-y-2">
             {data.clauses.map((c, i) => (
               <div key={i} className="rounded-md bg-muted/50 p-2.5">
@@ -98,7 +98,7 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
 
       {data.keyPoints && data.keyPoints.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Key Points</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">要点</h4>
           <div className="space-y-2">
             {data.keyPoints.map((p, i) => (
               <div key={i}>
@@ -112,7 +112,7 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
 
       <Button onClick={handleAnalyze} size="sm" variant="ghost" className="gap-2 text-xs">
         <RefreshCw className="h-3 w-3" />
-        Re-analyze
+        重新分析
       </Button>
     </div>
   )

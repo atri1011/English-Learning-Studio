@@ -10,7 +10,7 @@ interface ArticleCardProps {
 }
 
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString("en-US", {
+  return new Date(timestamp).toLocaleDateString("zh-CN", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -39,7 +39,7 @@ export function ArticleCard({ article, onClick }: ArticleCardProps) {
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <FileText className="h-3 w-3" />
-            {article.wordCount} words
+            {article.wordCount} 词
           </span>
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />

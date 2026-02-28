@@ -27,7 +27,7 @@ export function AppShell() {
                 className={cn("w-full justify-start gap-2")}
               >
                 <BookOpen className="h-4 w-4" />
-                Articles
+                文章库
               </Button>
             </Link>
             <Link to="/settings">
@@ -36,7 +36,7 @@ export function AppShell() {
                 className="w-full justify-start gap-2"
               >
                 <Settings className="h-4 w-4" />
-                Settings
+                设置
               </Button>
             </Link>
           </nav>
@@ -52,7 +52,7 @@ export function AppShell() {
               ) : (
                 <Moon className="h-4 w-4" />
               )}
-              {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              {theme === "dark" ? "浅色模式" : "深色模式"}
             </Button>
           </div>
         </aside>

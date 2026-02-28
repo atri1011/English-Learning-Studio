@@ -40,10 +40,10 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
     return (
       <div className="flex flex-col items-center py-6 text-center">
         <p className="text-sm text-muted-foreground mb-3">
-          Click to analyze sentence structure
+          点击分析句子成分
         </p>
         <Button onClick={handleAnalyze} size="sm" className="gap-2">
-          Analyze Structure
+          分析成分
         </Button>
       </div>
     )
@@ -53,7 +53,7 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Analyzing structure...</span>
+        <span className="ml-2 text-sm text-muted-foreground">分析成分中...</span>
       </div>
     )
   }
@@ -65,7 +65,7 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
         <p className="text-sm text-destructive mb-1">{result.errorMessage}</p>
         <Button onClick={handleAnalyze} size="sm" variant="outline" className="gap-2 mt-2">
           <RefreshCw className="h-3.5 w-3.5" />
-          Retry
+          重试
         </Button>
       </div>
     )
@@ -78,7 +78,7 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
     <div className="space-y-4">
       {/* Visual Sentence with Highlighted Constituents */}
       <div>
-        <h4 className="text-xs font-medium text-muted-foreground mb-2">Sentence Components</h4>
+        <h4 className="text-xs font-medium text-muted-foreground mb-2">句子成分</h4>
         <div className="flex flex-wrap gap-1.5 leading-relaxed">
           {data.spans.map((span, i) => (
             <span
@@ -97,7 +97,7 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
 
       {/* Legend */}
       <div>
-        <h4 className="text-xs font-medium text-muted-foreground mb-2">Legend</h4>
+        <h4 className="text-xs font-medium text-muted-foreground mb-2">图例</h4>
         <div className="flex flex-wrap gap-2">
           {Object.entries(CONSTITUENT_COLORS).map(([label, color]) => (
             <span
@@ -112,21 +112,21 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
 
       {data.structure && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Structure</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">句型结构</h4>
           <p className="text-sm">{data.structure}</p>
         </div>
       )}
 
       {data.notes && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Notes</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">补充说明</h4>
           <p className="text-sm text-muted-foreground">{data.notes}</p>
         </div>
       )}
 
       <Button onClick={handleAnalyze} size="sm" variant="ghost" className="gap-2 text-xs">
         <RefreshCw className="h-3 w-3" />
-        Re-analyze
+        重新分析
       </Button>
     </div>
   )

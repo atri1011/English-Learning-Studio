@@ -20,13 +20,13 @@ export function AnalysisPane({ sentence }: AnalysisPaneProps) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <h3 className="text-sm font-medium">Sentence Analysis</h3>
+        <h3 className="text-sm font-medium">句子分析</h3>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={prevSentence}>
-            Prev
+            上一句
           </Button>
           <Button variant="ghost" size="sm" onClick={nextSentence}>
-            Next
+            下一句
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => selectSentence(null)}>
             <X className="h-3.5 w-3.5" />
@@ -42,10 +42,10 @@ export function AnalysisPane({ sentence }: AnalysisPaneProps) {
       {/* Analysis Tabs */}
       <Tabs defaultValue="translation" className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="mx-4 mt-3 shrink-0">
-          <TabsTrigger value="translation" className="text-xs">Translation</TabsTrigger>
-          <TabsTrigger value="grammar" className="text-xs">Grammar</TabsTrigger>
-          <TabsTrigger value="constituents" className="text-xs">Structure</TabsTrigger>
-          <TabsTrigger value="explanation" className="text-xs">Explain</TabsTrigger>
+          <TabsTrigger value="translation" className="text-xs">翻译</TabsTrigger>
+          <TabsTrigger value="grammar" className="text-xs">语法</TabsTrigger>
+          <TabsTrigger value="constituents" className="text-xs">成分</TabsTrigger>
+          <TabsTrigger value="explanation" className="text-xs">讲解</TabsTrigger>
         </TabsList>
 
         <ScrollArea className="flex-1 min-h-0">

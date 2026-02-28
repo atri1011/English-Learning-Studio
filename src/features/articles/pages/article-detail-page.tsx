@@ -1,20 +1,22 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { ArrowLeft, Settings, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { useReaderStore } from "@/stores/reader-store"
 import { useUIStore } from "@/stores/ui-store"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { ReaderPane } from "@/features/reader/components/reader-pane"
 import { AnalysisPane } from "@/features/reader/components/analysis-pane"
 import { getArticle } from "@/features/articles/services/article-repository"
 import type { Article } from "@/types/db"
-import { useState } from "react"
 
 export function ArticleDetailPage() {
   const { articleId } = useParams<{ articleId: string }>()
   const navigate = useNavigate()
-  const { loadSentences, sentences, selectedSentenceId, panelOpen } = useReaderStore()
+  const { loadSentences, sentences, selectedSentenceId, selectSentence, panelOpen } = useReaderStore()
   const { theme, toggleTheme } = useUIStore()
+  const isMobile = useIsMobile()
   const [article, setArticle] = useState<Article | null>(null)
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function ArticleDetailPage() {
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground mr-2">
-              {article.sentenceCount} sentences
+              {article.sentenceCount} 句
             </span>
             <Link to="/settings">
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -67,10 +69,23 @@ export function ArticleDetailPage() {
       </div>
 
       {/* Analysis Panel - Desktop */}
-      {panelOpen && selectedSentence && (
+      {panelOpen && selectedSentence && !isMobile && (
         <aside className="hidden md:flex w-96 border-l bg-card flex-col shrink-0 overflow-hidden">
           <AnalysisPane sentence={selectedSentence} />
         </aside>
+      )}
+
+      {/* Analysis Panel - Mobile Bottom Sheet */}
+      {isMobile && (
+        <Sheet
+          open={panelOpen && !!selectedSentence}
+          onOpenChange={(open) => { if (!open) selectSentence(null) }}
+        >
+          <SheetContent side="bottom" showCloseButton={false} className="h-[60vh] p-0">
+            <SheetTitle className="sr-only">句子分析</SheetTitle>
+            {selectedSentence && <AnalysisPane sentence={selectedSentence} />}
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   )
