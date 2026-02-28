@@ -11,7 +11,7 @@ interface GrammarCardProps {
 
 interface GrammarResult {
   summary: string
-  tense: { primary: string; label: string }
+  tense: { primary: string; label: string; why?: string; signal?: string }
   voice: string
   clauses?: Array<{ type: string; text: string; role: string; label: string }>
   keyPoints?: Array<{ title: string; explain: string }>
@@ -74,9 +74,17 @@ export function GrammarCard({ sentence }: GrammarCardProps) {
         <p className="text-sm leading-relaxed">{data.summary}</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary">{data.tense?.label || data.tense?.primary}</Badge>
-        <Badge variant="outline">{data.voice === "passive" ? "被动语态" : "主动语态"}</Badge>
+      <div className="rounded-md bg-muted/50 p-2.5">
+        <div className="flex items-center gap-2 mb-1">
+          <Badge variant="secondary">{data.tense?.label || data.tense?.primary}</Badge>
+          <Badge variant="outline">{data.voice === "passive" ? "被动语态" : "主动语态"}</Badge>
+        </div>
+        {data.tense?.signal && (
+          <p className="text-xs text-primary/80 mb-1">标志: {data.tense.signal}</p>
+        )}
+        {data.tense?.why && (
+          <p className="text-sm text-muted-foreground">{data.tense.why}</p>
+        )}
       </div>
 
       {data.clauses && data.clauses.length > 0 && (

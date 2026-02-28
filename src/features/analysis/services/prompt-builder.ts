@@ -42,7 +42,9 @@ Sentence: "${sentenceText}"`,
   "summary": "Brief grammar summary in Chinese (max 150 chars)",
   "tense": {
     "primary": "tense name in English (e.g. simple_present, past_perfect)",
-    "label": "Chinese name of the tense"
+    "label": "Chinese name of the tense",
+    "why": "说明为什么判断为这个时态（中文，从句子中的具体线索出发）",
+    "signal": "标志词/结构（如 had + 过去分词）"
   },
   "voice": "active or passive",
   "clauses": [
@@ -96,7 +98,7 @@ Sentence: "${sentenceText}"`,
           role: "user",
           content: `Provide a detailed pedagogical explanation of this English sentence for Chinese learners. Return JSON with this exact format:
 {
-  "level": "estimated CEFR level (A1/A2/B1/B2/C1/C2)",
+  "level": "difficulty label in Chinese: 容易/中等/较难",
   "grammarPoints": [
     {
       "title": "Grammar point title in Chinese",
@@ -114,14 +116,49 @@ Sentence: "${sentenceText}"`,
   ],
   "expressionTips": ["Expression tip 1 in Chinese", "Expression tip 2"],
   "pitfalls": ["Common mistake 1 in Chinese"],
-  "practice": {
-    "question": "A practice question in Chinese",
-    "referenceAnswer": "Reference answer"
-  }
+  "practice": [
+    {
+      "type": "choice",
+      "question": "选择题问题（中文）",
+      "options": ["选项A", "选项B", "选项C", "选项D"],
+      "answer": 0,
+      "explanation": "解释为什么选这个答案（中文）"
+    },
+    {
+      "type": "fill",
+      "question": "填空题，用 ___ 表示空格",
+      "answer": "correct answer",
+      "explanation": "解释（中文）"
+    },
+    {
+      "type": "translate",
+      "question": "将下面的中文翻译成英文：一句中文",
+      "answer": "English translation",
+      "explanation": "翻译要点说明（中文）"
+    }
+  ]
 }
+
+Generate 2-3 practice items of different types (choice/fill/translate) based on the sentence.
 
 Sentence: "${sentenceText}"`,
         },
       ]
   }
+}
+
+export function buildWordLookupPrompt(word: string, context: string): ChatMessage[] {
+  return [
+    {
+      role: "system",
+      content: "You are a concise English dictionary for Chinese learners. Return ONLY valid JSON.",
+    },
+    {
+      role: "user",
+      content: `Translate this English word as used in the given sentence context.
+Return JSON: { "word": "${word}", "phonetic": "/.../ ", "pos": "词性（如：名词/动词/形容词/副词/介词/连词）", "meaningZh": "在本句中的中文释义" }
+Word: "${word}"
+Sentence: "${context}"`,
+    },
+  ]
 }

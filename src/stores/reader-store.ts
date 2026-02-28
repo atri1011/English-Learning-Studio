@@ -8,11 +8,13 @@ interface ReaderState {
   selectedSentenceId: string | null
   panelOpen: boolean
   loading: boolean
+  activeAnalysisTab: string
   loadSentences: (articleId: string) => Promise<void>
   selectSentence: (id: string | null) => void
   togglePanel: () => void
   nextSentence: () => void
   prevSentence: () => void
+  setActiveAnalysisTab: (tab: string) => void
 }
 
 export const useReaderStore = create<ReaderState>()((set, get) => ({
@@ -21,6 +23,7 @@ export const useReaderStore = create<ReaderState>()((set, get) => ({
   selectedSentenceId: null,
   panelOpen: false,
   loading: false,
+  activeAnalysisTab: "translation",
 
   loadSentences: async (articleId) => {
     set({ loading: true, sentences: [], rawText: "", selectedSentenceId: null })
@@ -58,5 +61,9 @@ export const useReaderStore = create<ReaderState>()((set, get) => ({
     if (idx > 0) {
       set({ selectedSentenceId: sentences[idx - 1].id })
     }
+  },
+
+  setActiveAnalysisTab: (tab) => {
+    set({ activeAnalysisTab: tab })
   },
 }))

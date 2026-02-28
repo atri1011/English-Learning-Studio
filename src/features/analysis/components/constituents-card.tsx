@@ -15,6 +15,11 @@ interface ConstituentsResult {
   notes?: string
 }
 
+const CONSTITUENT_LABELS_ZH: Record<string, string> = {
+  S: "主语", V: "谓语", O: "宾语",
+  Attr: "定语", Adv: "状语", Comp: "补语",
+}
+
 const CONSTITUENT_COLORS: Record<string, string> = {
   S: "bg-rose-500/15 border-rose-500/40 text-rose-900 dark:text-rose-200",
   V: "bg-blue-500/15 border-blue-500/40 text-blue-900 dark:text-blue-200",
@@ -104,7 +109,7 @@ export function ConstituentsCard({ sentence }: ConstituentsCardProps) {
               key={label}
               className={cn("text-xs px-1.5 py-0.5 rounded", color)}
             >
-              {label}
+              {CONSTITUENT_LABELS_ZH[label] || label}({label})
             </span>
           ))}
         </div>
