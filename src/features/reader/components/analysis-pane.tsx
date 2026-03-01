@@ -11,6 +11,7 @@ import { TranslationCard } from "@/features/analysis/components/translation-card
 import { GrammarCard } from "@/features/analysis/components/grammar-card"
 import { ConstituentsCard } from "@/features/analysis/components/constituents-card"
 import { ExplanationCard } from "@/features/analysis/components/explanation-card"
+import { ChatPanel } from "@/features/analysis/components/chat-panel"
 
 const ALL_TYPES: AnalysisType[] = ["translation", "grammar", "constituents", "explanation"]
 
@@ -70,24 +71,31 @@ export function AnalysisPane({ sentence }: AnalysisPaneProps) {
           <TabsTrigger value="grammar" className="text-xs">语法</TabsTrigger>
           <TabsTrigger value="constituents" className="text-xs">成分</TabsTrigger>
           <TabsTrigger value="explanation" className="text-xs">讲解</TabsTrigger>
+          <TabsTrigger value="chat" className="text-xs">追问</TabsTrigger>
         </TabsList>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="p-4">
-            <TabsContent value="translation" className="mt-0">
-              <TranslationCard sentence={sentence} />
-            </TabsContent>
-            <TabsContent value="grammar" className="mt-0">
-              <GrammarCard sentence={sentence} />
-            </TabsContent>
-            <TabsContent value="constituents" className="mt-0">
-              <ConstituentsCard sentence={sentence} />
-            </TabsContent>
-            <TabsContent value="explanation" className="mt-0">
-              <ExplanationCard sentence={sentence} />
-            </TabsContent>
-          </div>
-        </ScrollArea>
+        {activeAnalysisTab === "chat" ? (
+          <TabsContent value="chat" className="flex-1 min-h-0 mt-0">
+            <ChatPanel sentence={sentence} />
+          </TabsContent>
+        ) : (
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-4">
+              <TabsContent value="translation" className="mt-0">
+                <TranslationCard sentence={sentence} />
+              </TabsContent>
+              <TabsContent value="grammar" className="mt-0">
+                <GrammarCard sentence={sentence} />
+              </TabsContent>
+              <TabsContent value="constituents" className="mt-0">
+                <ConstituentsCard sentence={sentence} />
+              </TabsContent>
+              <TabsContent value="explanation" className="mt-0">
+                <ExplanationCard sentence={sentence} />
+              </TabsContent>
+            </div>
+          </ScrollArea>
+        )}
       </Tabs>
     </div>
   )

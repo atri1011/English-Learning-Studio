@@ -1,7 +1,7 @@
 import type { AnalysisType } from "@/types/db"
 
-interface ChatMessage {
-  role: "system" | "user"
+export interface ChatMessage {
+  role: "system" | "user" | "assistant"
   content: string
 }
 
@@ -161,4 +161,24 @@ Word: "${word}"
 Sentence: "${context}"`,
     },
   ]
+}
+
+export function buildChatPrompt(
+  sentenceText: string,
+  analysisContext: string,
+  chatHistory: Array<{ role: "user" | "assistant"; content: string }>,
+): ChatMessage[] {
+  const system: ChatMessage = {
+    role: "system",
+    content: `你是一位专业的英语语言学辅导老师，正在帮助中国学生理解一个英语句子。
+用中文回答，简洁易懂。
+
+当前句子：
+"${sentenceText}"
+
+${analysisContext ? `已有分析结果：\n${analysisContext}\n` : ""}
+请基于以上句子上下文回答学生的问题。如果学生的问题与当前句子无关，礼貌地引导回来。`,
+  }
+
+  return [system, ...chatHistory.map((m) => ({ ...m, role: m.role as ChatMessage["role"] }))]
 }
