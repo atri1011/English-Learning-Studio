@@ -1,6 +1,6 @@
 import { db } from "./dexie"
 
-interface BackupData {
+interface BackupDataV1 {
   version: 1
   exportedAt: number
   data: {
@@ -11,18 +11,33 @@ interface BackupData {
   }
 }
 
+interface BackupDataV2 {
+  version: 2
+  exportedAt: number
+  data: {
+    articles: unknown[]
+    sentences: unknown[]
+    analysisResults: unknown[]
+    apiProfiles: unknown[]
+    vocabulary: unknown[]
+  }
+}
+
+type BackupData = BackupDataV1 | BackupDataV2
+
 export async function exportBackup(): Promise<string> {
-  const [articles, sentences, analysisResults, apiProfiles] = await Promise.all([
+  const [articles, sentences, analysisResults, apiProfiles, vocabulary] = await Promise.all([
     db.articles.toArray(),
     db.sentences.toArray(),
     db.analysisResults.toArray(),
     db.apiProfiles.toArray(),
+    db.vocabulary.toArray(),
   ])
 
-  const backup: BackupData = {
-    version: 1,
+  const backup: BackupDataV2 = {
+    version: 2,
     exportedAt: Date.now(),
-    data: { articles, sentences, analysisResults, apiProfiles },
+    data: { articles, sentences, analysisResults, apiProfiles, vocabulary },
   }
 
   return JSON.stringify(backup)
@@ -49,26 +64,37 @@ export async function importBackup(file: File): Promise<{ articles: number; sent
     throw new Error("Invalid backup file: not valid JSON")
   }
 
-  if (backup.version !== 1 || !backup.data) {
+  if (!backup.data || (backup.version !== 1 && backup.version !== 2)) {
     throw new Error("Invalid backup file: unrecognized format")
   }
 
   const { articles, sentences, analysisResults, apiProfiles } = backup.data
+  const vocabulary = backup.version === 2 ? backup.data.vocabulary : []
 
-  await db.transaction("rw", [db.articles, db.sentences, db.analysisResults, db.apiProfiles], async () => {
+  const migratedArticles = (articles ?? []).map((a: unknown) => {
+    const article = a as Record<string, unknown>
+    return {
+      ...article,
+      tags: article.tags ?? [],
+    }
+  })
+
+  await db.transaction("rw", [db.articles, db.sentences, db.analysisResults, db.apiProfiles, db.vocabulary], async () => {
     await db.articles.clear()
     await db.sentences.clear()
     await db.analysisResults.clear()
     await db.apiProfiles.clear()
+    await db.vocabulary.clear()
 
-    if (articles?.length) await db.articles.bulkAdd(articles as never[])
+    if (migratedArticles.length) await db.articles.bulkAdd(migratedArticles as never[])
     if (sentences?.length) await db.sentences.bulkAdd(sentences as never[])
     if (analysisResults?.length) await db.analysisResults.bulkAdd(analysisResults as never[])
     if (apiProfiles?.length) await db.apiProfiles.bulkAdd(apiProfiles as never[])
+    if (vocabulary?.length) await db.vocabulary.bulkAdd(vocabulary as never[])
   })
 
   return {
-    articles: articles?.length ?? 0,
+    articles: migratedArticles.length,
     sentences: sentences?.length ?? 0,
   }
 }

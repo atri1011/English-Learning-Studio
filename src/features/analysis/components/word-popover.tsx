@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react"
-import { Loader2, RotateCw } from "lucide-react"
+import { Loader2, RotateCw, Star } from "lucide-react"
 import { useWordLookupStore } from "@/stores/word-lookup-store"
+import { useVocabularyStore } from "@/stores/vocabulary-store"
+import { useReaderStore } from "@/stores/reader-store"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface WordPopoverProps {
   word: string
@@ -10,14 +13,15 @@ interface WordPopoverProps {
 
 export function WordPopover({ word, context }: WordPopoverProps) {
   const { lookup, getResult, getError, isWordLoading } = useWordLookupStore()
+  const { isWordSaved, addWord, unsaveWord } = useVocabularyStore()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
 
   const result = getResult(word)
   const error = getError(word)
   const loading = isWordLoading(word)
+  const saved = isWordSaved(word)
 
-  // 打开时触发查询（与 setOpen 分离，避免在 state updater 中调用异步函数）
   useEffect(() => {
     if (open && !result && !loading && !error) {
       lookup(word, context)
@@ -36,7 +40,28 @@ export function WordPopover({ word, context }: WordPopoverProps) {
     lookup(word, context)
   }, [word, context, lookup])
 
-  // 点击外部关闭
+  const handleToggleSave = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (saved) {
+      await unsaveWord(word)
+      toast("已从生词本移除")
+    } else if (result) {
+      const sentences = useReaderStore.getState().sentences
+      const sentence = sentences.find((s) => s.text === context)
+      await addWord({
+        word: result.word || word,
+        phonetic: result.phonetic || "",
+        pos: result.pos || "",
+        meaningZh: result.meaningZh || "",
+        context,
+        articleId: sentence?.articleId ?? "",
+        sentenceId: sentence?.id ?? "",
+      })
+      toast("已添加到生词本")
+    }
+  }, [saved, result, word, context, unsaveWord, addWord])
+
   useEffect(() => {
     if (!open) return
     const handleClickOutside = (e: MouseEvent) => {
@@ -62,7 +87,7 @@ export function WordPopover({ word, context }: WordPopoverProps) {
       </span>
       {open && (
         <span
-          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 z-50 w-max max-w-[220px] rounded-md border bg-popover p-2 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-100"
+          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 z-50 w-max max-w-[240px] rounded-md border bg-popover p-2 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-100"
         >
           {loading ? (
             <span className="flex items-center gap-1.5">
@@ -77,6 +102,16 @@ export function WordPopover({ word, context }: WordPopoverProps) {
                   <span className="text-[11px] text-muted-foreground">{result.phonetic}</span>
                 )}
                 <span className="text-[11px] text-primary/80">{result.pos}</span>
+                <span
+                  className="ml-auto cursor-pointer shrink-0"
+                  onClick={handleToggleSave}
+                  title={saved ? "取消收藏" : "收藏到生词本"}
+                >
+                  <Star className={cn(
+                    "h-3.5 w-3.5 transition-colors",
+                    saved ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground hover:text-yellow-400",
+                  )} />
+                </span>
               </span>
               <span className="text-sm leading-snug">{result.meaningZh}</span>
             </span>
@@ -92,7 +127,6 @@ export function WordPopover({ word, context }: WordPopoverProps) {
               </span>
             </span>
           ) : null}
-          {/* 小三角箭头 */}
           <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-border" />
           <span className="absolute left-1/2 -translate-x-1/2 top-full -mt-px border-4 border-transparent border-t-popover" />
         </span>

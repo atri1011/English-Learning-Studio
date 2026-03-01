@@ -47,13 +47,13 @@ export function AnalysisPane({ sentence }: AnalysisPaneProps) {
             <Sparkles className="h-3.5 w-3.5" />
             全部分析
           </Button>
-          <Button variant="ghost" size="sm" onClick={prevSentence}>
+          <Button variant="ghost" size="sm" onClick={prevSentence} title="上一句 (K / ↑)">
             上一句
           </Button>
-          <Button variant="ghost" size="sm" onClick={nextSentence}>
+          <Button variant="ghost" size="sm" onClick={nextSentence} title="下一句 (J / ↓)">
             下一句
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => selectSentence(null)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => selectSentence(null)} title="关闭 (Esc)">
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>

@@ -10,7 +10,8 @@ function generateId(): string {
 export async function createArticle(
   title: string,
   rawText: string,
-  sourceType: "paste" | "upload",
+  sourceType: "paste" | "upload" | "url" | "md",
+  tags: string[] = [],
 ): Promise<Article> {
   const now = Date.now()
   const parsed = parseArticle(rawText)
@@ -23,6 +24,7 @@ export async function createArticle(
     wordCount: countWords(rawText),
     sentenceCount: parsed.length,
     status: "ready",
+    tags,
     createdAt: now,
     updatedAt: now,
   }
@@ -63,14 +65,83 @@ export async function updateArticleTitle(
   await db.articles.update(id, { title, updatedAt: Date.now() })
 }
 
+export async function updateArticleTags(
+  id: string,
+  tags: string[],
+): Promise<void> {
+  await db.articles.update(id, { tags, updatedAt: Date.now() })
+}
+
 export async function deleteArticle(id: string): Promise<void> {
-  await db.transaction("rw", [db.articles, db.sentences, db.analysisResults], async () => {
+  await db.transaction("rw", [db.articles, db.sentences, db.analysisResults, db.vocabulary], async () => {
     const sentenceIds = await db.sentences
       .where("articleId")
       .equals(id)
       .primaryKeys()
     await db.analysisResults.where("articleId").equals(id).delete()
+    await db.vocabulary.where("articleId").equals(id).delete()
     await db.sentences.bulkDelete(sentenceIds)
     await db.articles.delete(id)
   })
+}
+
+export interface ArticleProgress {
+  analyzed: number
+  total: number
+}
+
+export async function getArticleProgress(articleId: string): Promise<ArticleProgress> {
+  const sentenceIds = await db.sentences
+    .where("articleId")
+    .equals(articleId)
+    .primaryKeys()
+
+  if (sentenceIds.length === 0) return { analyzed: 0, total: 0 }
+
+  const analyzedSet = new Set<string>()
+  const results = await db.analysisResults
+    .where("articleId")
+    .equals(articleId)
+    .toArray()
+
+  for (const r of results) {
+    if (r.status === "success") {
+      analyzedSet.add(r.sentenceId)
+    }
+  }
+
+  return {
+    analyzed: analyzedSet.size,
+    total: sentenceIds.length,
+  }
+}
+
+export async function getAllArticleProgress(): Promise<Record<string, ArticleProgress>> {
+  const articles = await db.articles.toArray()
+  const progressMap: Record<string, ArticleProgress> = {}
+
+  const allResults = await db.analysisResults
+    .where("status")
+    .equals("success")
+    .toArray()
+
+  // Build articleId -> Set<sentenceId> map
+  const analyzedByArticle = new Map<string, Set<string>>()
+  for (const r of allResults) {
+    let set = analyzedByArticle.get(r.articleId)
+    if (!set) {
+      set = new Set()
+      analyzedByArticle.set(r.articleId, set)
+    }
+    set.add(r.sentenceId)
+  }
+
+  for (const a of articles) {
+    progressMap[a.id] = {
+      analyzed: analyzedByArticle.get(a.id)?.size ?? 0,
+      total: a.sentenceCount,
+    }
+  }
+
+  return progressMap
 }

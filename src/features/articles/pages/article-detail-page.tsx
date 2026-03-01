@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { useReaderStore } from "@/stores/reader-store"
 import { useUIStore } from "@/stores/ui-store"
+import { useVocabularyStore } from "@/stores/vocabulary-store"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useKeyboardNavigation } from "@/hooks/use-keyboard-navigation"
 import { ReaderPane } from "@/features/reader/components/reader-pane"
 import { AnalysisPane } from "@/features/reader/components/analysis-pane"
 import { getArticle } from "@/features/articles/services/article-repository"
@@ -16,8 +18,11 @@ export function ArticleDetailPage() {
   const navigate = useNavigate()
   const { loadSentences, sentences, selectedSentenceId, selectSentence, panelOpen } = useReaderStore()
   const { theme, toggleTheme } = useUIStore()
+  const { loadVocabulary } = useVocabularyStore()
   const isMobile = useIsMobile()
   const [article, setArticle] = useState<Article | null>(null)
+
+  useKeyboardNavigation()
 
   useEffect(() => {
     if (!articleId) return
@@ -29,7 +34,8 @@ export function ArticleDetailPage() {
       setArticle(a)
     })
     loadSentences(articleId)
-  }, [articleId, loadSentences, navigate])
+    loadVocabulary()
+  }, [articleId, loadSentences, navigate, loadVocabulary])
 
   if (!article) return null
 

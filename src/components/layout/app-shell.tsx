@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom"
-import { BookOpen, Settings, Moon, Sun } from "lucide-react"
+import { BookOpen, BookMarked, Settings, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useUIStore } from "@/stores/ui-store"
 import { cn } from "@/lib/utils"
@@ -28,6 +28,15 @@ export function AppShell() {
               >
                 <BookOpen className="h-4 w-4" />
                 文章库
+              </Button>
+            </Link>
+            <Link to="/vocabulary">
+              <Button
+                variant={location.pathname === "/vocabulary" ? "secondary" : "ghost"}
+                className="w-full justify-start gap-2"
+              >
+                <BookMarked className="h-4 w-4" />
+                生词本
               </Button>
             </Link>
             <Link to="/settings">
@@ -66,6 +75,11 @@ export function AppShell() {
               <span className="font-semibold">English Studio</span>
             </div>
             <div className="flex items-center gap-1">
+              <Link to="/vocabulary">
+                <Button variant="ghost" size="icon">
+                  <BookMarked className="h-4 w-4" />
+                </Button>
+              </Link>
               <Link to="/settings">
                 <Button variant="ghost" size="icon">
                   <Settings className="h-4 w-4" />

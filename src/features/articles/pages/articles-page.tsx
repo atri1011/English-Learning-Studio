@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Plus, BookOpen, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { ArticleImportDialog } from "../components/article-import-dialog"
 
 export function ArticlesPage() {
   const navigate = useNavigate()
-  const { articles, loading, loadArticles } = useArticleStore()
+  const { articles, loading, loadArticles, tagFilter, setTagFilter, getAllTags } = useArticleStore()
   const { profiles, loadProfiles } = useSettingsStore()
   const [importOpen, setImportOpen] = useState(false)
 
@@ -19,6 +19,12 @@ export function ArticlesPage() {
   }, [loadArticles, loadProfiles])
 
   const hasApiProfile = profiles.length > 0
+  const allTags = getAllTags()
+
+  const filteredArticles = useMemo(() => {
+    if (!tagFilter) return articles
+    return articles.filter((a) => a.tags?.includes(tagFilter))
+  }, [articles, tagFilter])
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -34,6 +40,31 @@ export function ArticlesPage() {
           添加文章
         </Button>
       </div>
+
+      {/* Tag Filter Bar */}
+      {allTags.length > 0 && (
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+          <Button
+            variant={tagFilter === null ? "secondary" : "ghost"}
+            size="sm"
+            className="shrink-0"
+            onClick={() => setTagFilter(null)}
+          >
+            全部
+          </Button>
+          {allTags.map((tag) => (
+            <Button
+              key={tag}
+              variant={tagFilter === tag ? "secondary" : "ghost"}
+              size="sm"
+              className="shrink-0"
+              onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+            >
+              {tag}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -51,7 +82,7 @@ export function ArticlesPage() {
           </div>
           <h3 className="text-lg font-medium mb-2">还没有文章</h3>
           <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-            导入一篇英文文章开始学习，支持粘贴文本或上传 .txt 文件。
+            导入一篇英文文章开始学习，支持粘贴文本、上传文件或 URL 导入。
           </p>
           {!hasApiProfile && (
             <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 mb-4 max-w-sm">
@@ -72,9 +103,16 @@ export function ArticlesPage() {
             导入第一篇文章
           </Button>
         </div>
+      ) : filteredArticles.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm text-muted-foreground">没有标签为 "{tagFilter}" 的文章</p>
+          <Button variant="ghost" size="sm" className="mt-2" onClick={() => setTagFilter(null)}>
+            查看全部
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {articles.map((article) => (
+          {filteredArticles.map((article) => (
             <ArticleCard
               key={article.id}
               article={article}

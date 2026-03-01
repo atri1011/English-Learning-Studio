@@ -2,10 +2,11 @@ export interface Article {
   id: string
   title: string
   rawText: string
-  sourceType: "paste" | "upload"
+  sourceType: "paste" | "upload" | "url" | "md"
   wordCount: number
   sentenceCount: number
   status: "draft" | "ready" | "archived"
+  tags: string[]
   createdAt: number
   updatedAt: number
 }
@@ -34,6 +35,19 @@ export interface AnalysisResult {
   attempts: number
   createdAt: number
   updatedAt: number
+}
+
+export interface VocabularyEntry {
+  id: string
+  word: string
+  normalizedWord: string
+  phonetic: string
+  pos: string
+  meaningZh: string
+  context: string
+  articleId: string
+  sentenceId: string
+  createdAt: number
 }
 
 export interface ApiProfile {
