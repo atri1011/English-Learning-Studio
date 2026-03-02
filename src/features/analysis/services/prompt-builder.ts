@@ -23,10 +23,24 @@ export function buildPrompt(type: AnalysisType, sentenceText: string): ChatMessa
 {
   "translationZh": "natural Chinese translation",
   "literalZh": "literal/word-by-word Chinese translation",
+  "difficulty": "容易|中等|较难",
   "alignments": [
-    { "source": "English phrase", "target": "Chinese phrase", "note": "explanation if needed" }
+    {
+      "id": 1,
+      "source": "English phrase",
+      "target": "Chinese phrase",
+      "sourceStart": 0,
+      "sourceEnd": 14,
+      "note": "explanation if needed"
+    }
   ]
 }
+
+Rules for alignments:
+- "id" is a sequential integer starting from 1
+- "sourceStart" and "sourceEnd" are character offsets in the original sentence (0-based, end is exclusive)
+- Break the sentence into meaningful phrase-level chunks covering the entire sentence
+- Each alignment maps an English phrase to its Chinese translation
 
 Sentence: "${sentenceText}"`,
         },
