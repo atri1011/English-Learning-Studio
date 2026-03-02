@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { db } from "@/lib/db/dexie"
 import type { AnalysisResult, AnalysisType, Sentence } from "@/types/db"
-import { callLLM } from "@/lib/api/openai-compatible-client"
+import { callLLM, extractJsonObjectFromText } from "@/lib/api/openai-compatible-client"
 import { buildPrompt, buildArticleChunkTranslationPrompt } from "@/features/analysis/services/prompt-builder"
 import { useSettingsStore } from "./settings-store"
 
@@ -32,16 +32,6 @@ function fullTranslationSentenceId(articleId: string) {
 
 function fullTranslationKey(articleId: string) {
   return cacheKey(fullTranslationSentenceId(articleId), FULL_TRANSLATION_TYPE)
-}
-
-function extractJsonObject(content: string): Record<string, unknown> {
-  try {
-    return JSON.parse(content)
-  } catch {
-    const match = content.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error("Failed to parse AI response as JSON")
-    return JSON.parse(match[0])
-  }
 }
 
 function splitByHardLimit(text: string, maxChars: number): string[] {
@@ -268,7 +258,7 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
                 messages: prompt,
                 responseFormat: { type: "json_object" },
               })
-              const parsed = extractJsonObject(response.content)
+              const parsed = extractJsonObjectFromText(response.content)
 
               const chunkSentenceMap: Record<string, string> = {}
               const sourceToIndex = new Map<string, number>()
@@ -474,7 +464,7 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
         responseFormat: { type: "json_object" },
       })
 
-      const parsed = extractJsonObject(response.content)
+      const parsed = extractJsonObjectFromText(response.content)
 
       const now = Date.now()
       const result: AnalysisResult = {

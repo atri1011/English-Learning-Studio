@@ -1,45 +1,26 @@
 import { create } from "zustand"
-import { callLLM } from "@/lib/api/openai-compatible-client"
+import { callLLM, extractJsonObjectFromText } from "@/lib/api/openai-compatible-client"
 import { buildWordLookupPrompt } from "@/features/analysis/services/prompt-builder"
 import { useSettingsStore } from "./settings-store"
-
-/** 从 LLM 返回内容中提取 JSON，兼容 markdown 代码块、前后缀文本等情况 */
-function extractJson<T>(content: string): T {
-  // 1. 直接解析
-  try {
-    return JSON.parse(content)
-  } catch {
-    // continue
-  }
-
-  // 2. 提取 markdown 代码块内的内容
-  const codeBlockMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
-  if (codeBlockMatch) {
-    try {
-      return JSON.parse(codeBlockMatch[1])
-    } catch {
-      // continue
-    }
-  }
-
-  // 3. 提取第一个完整的 {...}
-  const braceMatch = content.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
-  if (braceMatch) {
-    try {
-      return JSON.parse(braceMatch[0])
-    } catch {
-      // continue
-    }
-  }
-
-  throw new Error(`AI 返回内容无法解析: ${content.slice(0, 120)}`)
-}
 
 export interface WordLookupResult {
   word: string
   phonetic: string
   pos: string
   meaningZh: string
+}
+
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v.trim() : fallback
+}
+
+function normalizeWordLookupResult(raw: Record<string, unknown>, fallbackWord: string): WordLookupResult {
+  return {
+    word: str(raw.word, fallbackWord),
+    phonetic: str(raw.phonetic),
+    pos: str(raw.pos),
+    meaningZh: str(raw.meaningZh),
+  }
 }
 
 interface WordLookupState {
@@ -99,7 +80,8 @@ export const useWordLookupStore = create<WordLookupState>()((set, get) => ({
         responseFormat: { type: "json_object" },
       })
 
-      const parsed = extractJson<WordLookupResult>(response.content)
+      const parsedRaw = extractJsonObjectFromText(response.content)
+      const parsed = normalizeWordLookupResult(parsedRaw, word)
 
       set((s) => {
         const next = new Set(s.loadingWords)
