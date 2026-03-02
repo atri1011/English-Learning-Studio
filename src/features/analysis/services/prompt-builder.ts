@@ -147,6 +147,35 @@ Sentence: "${sentenceText}"`,
   }
 }
 
+export function buildFullArticleTranslationPrompt(articleText: string): ChatMessage[] {
+  return [
+    {
+      role: "system",
+      content: `You are a professional English-to-Chinese translator.
+Return ONLY valid JSON. Do not output markdown or any extra text.
+Preserve the original meaning, tone, and paragraph boundaries as much as possible.`,
+    },
+    {
+      role: "user",
+      content: `Translate the following full English article into natural, fluent Chinese.
+Return JSON with this exact format:
+{
+  "titleZh": "中文标题（可根据原文拟定）",
+  "translationZh": "完整中文译文，段落之间用\\n\\n分隔",
+  "summaryZh": "一句话中文摘要（不超过60字）"
+}
+
+Constraints:
+- Keep facts and numbers accurate.
+- Do not omit paragraphs.
+- Do not add content that is not in the source.
+
+Article:
+"""${articleText}"""`,
+    },
+  ]
+}
+
 export function buildWordLookupPrompt(word: string, context: string): ChatMessage[] {
   return [
     {

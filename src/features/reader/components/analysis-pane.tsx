@@ -1,4 +1,3 @@
-import { useEffect } from "react"
 import { X, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -21,16 +20,7 @@ interface AnalysisPaneProps {
 
 export function AnalysisPane({ sentence }: AnalysisPaneProps) {
   const { selectSentence, nextSentence, prevSentence, activeAnalysisTab, setActiveAnalysisTab } = useReaderStore()
-  const { analyze, getResult, isLoading } = useAnalysisStore()
-
-  // 改进1: 自动触发翻译
-  useEffect(() => {
-    const hasResult = getResult(sentence.id, "translation")
-    const loading = isLoading(sentence.id, "translation")
-    if (!hasResult && !loading) {
-      analyze(sentence, "translation")
-    }
-  }, [sentence.id])
+  const { analyze } = useAnalysisStore()
 
   // 改进2: 一键全分析
   const handleAnalyzeAll = () => {

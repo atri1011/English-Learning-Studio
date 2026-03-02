@@ -106,6 +106,7 @@ export async function getArticleProgress(articleId: string): Promise<ArticleProg
 
   for (const r of results) {
     if (r.status === "success") {
+      if (r.sentenceId.startsWith("article:")) continue
       analyzedSet.add(r.sentenceId)
     }
   }
@@ -120,14 +121,14 @@ export async function getAllArticleProgress(): Promise<Record<string, ArticlePro
   const articles = await db.articles.toArray()
   const progressMap: Record<string, ArticleProgress> = {}
 
-  const allResults = await db.analysisResults
-    .where("status")
-    .equals("success")
-    .toArray()
+  // analysisResults 当前 schema 没有 status 索引，不能用 where("status")
+  const allResults = await db.analysisResults.toArray()
 
   // Build articleId -> Set<sentenceId> map
   const analyzedByArticle = new Map<string, Set<string>>()
   for (const r of allResults) {
+    if (r.status !== "success") continue
+    if (r.sentenceId.startsWith("article:")) continue
     let set = analyzedByArticle.get(r.articleId)
     if (!set) {
       set = new Set()

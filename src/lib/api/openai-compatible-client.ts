@@ -16,7 +16,7 @@ export async function callLLM(request: LLMRequest): Promise<LLMResponse> {
   const url = `${request.baseURL.replace(/\/+$/, "")}/v1/chat/completions`
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 60_000)
+  const timeout = setTimeout(() => controller.abort(), 180_000)
 
   try {
     const res = await fetch(url, {
