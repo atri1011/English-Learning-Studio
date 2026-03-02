@@ -176,6 +176,55 @@ Article:
   ]
 }
 
+export function buildArticleChunkTranslationPrompt(
+  chunkText: string,
+  chunkIndex: number,
+  totalChunks: number,
+  sentenceList: string[],
+): ChatMessage[] {
+  const sentenceLines = sentenceList
+    .map((s, i) => `${i + 1}. ${s}`)
+    .join("\n")
+
+  return [
+    {
+      role: "system",
+      content: `You are a professional English-to-Chinese translator.
+Return ONLY valid JSON. Do not output markdown or any extra text.
+Keep meaning accurate and preserve the original tone and style.`,
+    },
+    {
+      role: "user",
+      content: `Translate this segment of an English article into Chinese.
+This is segment ${chunkIndex} of ${totalChunks}.
+
+Return JSON with this exact format:
+{
+  "chunkTranslationZh": "Chinese translation for this segment only",
+  "sentenceTranslations": [
+    {
+      "index": 1,
+      "source": "original English sentence",
+      "translationZh": "Chinese translation of this sentence"
+    }
+  ]
+}
+
+Constraints:
+- Translate only the provided segment.
+- Do not add explanations.
+- Keep paragraph breaks if present.
+- sentenceTranslations must include every sentence listed below, in the same order.
+
+Segment:
+"""${chunkText}"""
+
+Sentences in this segment:
+${sentenceLines}`,
+    },
+  ]
+}
+
 export function buildWordLookupPrompt(word: string, context: string): ChatMessage[] {
   return [
     {

@@ -25,6 +25,7 @@ type TranslationMode = "sentence" | "article"
 
 export function TranslationCard({ sentence }: TranslationCardProps) {
   const [mode, setMode] = useState<TranslationMode>("sentence")
+  const [showFullArticleText, setShowFullArticleText] = useState(false)
   const rawText = useReaderStore((s) => s.rawText)
   const {
     getResult,
@@ -44,6 +45,12 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
   useEffect(() => {
     loadCachedArticleTranslation(sentence.articleId)
   }, [sentence.articleId, loadCachedArticleTranslation])
+
+  // 切换句子时优先回到逐句翻译视图，避免始终展示整篇译文
+  useEffect(() => {
+    setMode("sentence")
+    setShowFullArticleText(false)
+  }, [sentence.id])
 
   const sentenceResult = getResult(sentence.id, "translation")
   const sentenceLoading = isLoading(sentence.id, "translation")
@@ -187,9 +194,25 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
           </div>
         )}
 
-        <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-1.5">全文译文</h4>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{data.translationZh}</p>
+        <div className="rounded-md border bg-muted/20 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-xs font-medium text-muted-foreground">全文译文</h4>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => setShowFullArticleText((v) => !v)}
+            >
+              {showFullArticleText ? "收起全文" : "展开全文"}
+            </Button>
+          </div>
+          {showFullArticleText ? (
+            <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">{data.translationZh}</p>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              已生成全文翻译，点击“展开全文”查看完整内容。
+            </p>
+          )}
         </div>
 
         <Button onClick={handleAnalyzeArticle} size="sm" variant="ghost" className="gap-2 text-xs">

@@ -12,6 +12,88 @@ interface LLMResponse {
   content: string
 }
 
+function normalizeContent(value: unknown): string {
+  if (typeof value === "string") return value
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") return item
+        if (!item || typeof item !== "object") return ""
+        const maybeText = (item as { text?: unknown }).text
+        if (typeof maybeText === "string") return maybeText
+        const maybeContent = (item as { content?: unknown }).content
+        if (typeof maybeContent === "string") return maybeContent
+        return ""
+      })
+      .join("")
+  }
+  return ""
+}
+
+function extractContentFromPayload(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return ""
+
+  const p = payload as {
+    choices?: Array<{ message?: { content?: unknown }; delta?: { content?: unknown } }>
+    content?: unknown
+  }
+
+  const direct = normalizeContent(p.choices?.[0]?.message?.content)
+  if (direct) return direct
+
+  const delta = normalizeContent(p.choices?.[0]?.delta?.content)
+  if (delta) return delta
+
+  return normalizeContent(p.content)
+}
+
+function tryParseJson(raw: string): unknown | null {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function extractContentFromSSE(raw: string): string {
+  let assembled = ""
+
+  const lines = raw.split(/\r?\n/)
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed.startsWith("data:")) continue
+
+    const dataPart = trimmed.slice(5).trim()
+    if (!dataPart || dataPart === "[DONE]") continue
+
+    const payload = tryParseJson(dataPart)
+    if (!payload) continue
+
+    if (
+      typeof payload === "object" &&
+      payload !== null &&
+      "choices" in payload
+    ) {
+      const choice = (payload as { choices?: Array<{ message?: { content?: unknown }; delta?: { content?: unknown } }> }).choices?.[0]
+      const delta = normalizeContent(choice?.delta?.content)
+      if (delta) {
+        assembled += delta
+        continue
+      }
+      const message = normalizeContent(choice?.message?.content)
+      if (message) {
+        assembled = message
+      }
+      continue
+    }
+
+    const content = extractContentFromPayload(payload)
+    if (content) assembled += content
+  }
+
+  return assembled.trim()
+}
+
 export async function callLLM(request: LLMRequest): Promise<LLMResponse> {
   const url = `${request.baseURL.replace(/\/+$/, "")}/v1/chat/completions`
 
@@ -46,14 +128,21 @@ export async function callLLM(request: LLMRequest): Promise<LLMResponse> {
       throw new Error(`API error ${res.status}: ${body.slice(0, 200)}`)
     }
 
-    const data = await res.json()
-    const content = data.choices?.[0]?.message?.content
-
-    if (!content) {
+    const raw = await res.text()
+    if (!raw.trim()) {
       throw new Error("Empty response from AI")
     }
 
-    return { content }
+    const payload = tryParseJson(raw)
+    if (payload) {
+      const content = extractContentFromPayload(payload)
+      if (content) return { content }
+    }
+
+    const sseContent = extractContentFromSSE(raw)
+    if (sseContent) return { content: sseContent }
+
+    throw new Error(`Failed to parse AI response: ${raw.slice(0, 200)}`)
   } finally {
     clearTimeout(timeout)
   }
