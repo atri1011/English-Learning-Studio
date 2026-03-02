@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react"
-import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload } from "lucide-react"
+import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload, Pencil } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -18,42 +18,78 @@ export function SettingsPage() {
     activeProfileId,
     loadProfiles,
     addProfile,
+    updateProfile,
     deleteProfile,
     setActiveProfile,
   } = useSettingsStore()
 
   const [showForm, setShowForm] = useState(false)
-  const [testing, setTesting] = useState(false)
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null)
+  const [testingProfileId, setTestingProfileId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
   const importRef = useRef<HTMLInputElement>(null)
-  const [form, setForm] = useState({
+
+  const emptyForm = {
     name: "",
     baseURL: "",
     apiKey: "",
     model: "",
     temperature: 0.3,
     maxTokens: 2000,
-  })
+  }
+
+  const [form, setForm] = useState(emptyForm)
 
   useEffect(() => {
     loadProfiles()
   }, [loadProfiles])
 
-  const handleAdd = async () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.baseURL || !form.apiKey || !form.model) {
       toast.error("请填写所有必填项")
       return
     }
-    await addProfile(form)
-    setForm({ name: "", baseURL: "", apiKey: "", model: "", temperature: 0.3, maxTokens: 2000 })
-    setShowForm(false)
-    toast.success("已添加 API 配置")
+    setSaving(true)
+    try {
+      if (editingProfileId) {
+        await updateProfile(editingProfileId, form)
+        toast.success("已保存配置修改")
+      } else {
+        await addProfile(form)
+        toast.success("已添加 API 配置")
+      }
+      setForm(emptyForm)
+      setEditingProfileId(null)
+      setShowForm(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleTest = async (baseURL: string, apiKey: string, model: string) => {
-    setTesting(true)
+  const handleEdit = (profile: typeof profiles[number]) => {
+    setEditingProfileId(profile.id)
+    setForm({
+      name: profile.name,
+      baseURL: profile.baseURL,
+      apiKey: profile.apiKey,
+      model: profile.model,
+      temperature: profile.temperature,
+      maxTokens: profile.maxTokens,
+    })
+    setShowForm(true)
+  }
+
+  const handleCancel = () => {
+    setShowForm(false)
+    setEditingProfileId(null)
+    setForm(emptyForm)
+  }
+
+  const handleTest = async (profileId: string, baseURL: string, apiKey: string, model: string) => {
+    setTestingProfileId(profileId)
     const result = await testConnection(baseURL, apiKey, model)
-    setTesting(false)
+    setTestingProfileId(null)
     if (result.success) {
       toast.success("连接成功")
     } else {
@@ -103,6 +139,14 @@ export function SettingsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => handleEdit(profile)}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1" />
+                    编辑
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="text-destructive"
                     onClick={() => {
                       deleteProfile(profile.id)
@@ -125,10 +169,10 @@ export function SettingsPage() {
                   variant="outline"
                   size="sm"
                   className="ml-auto text-xs h-7"
-                  disabled={testing}
-                  onClick={() => handleTest(profile.baseURL, profile.apiKey, profile.model)}
+                  disabled={testingProfileId !== null}
+                  onClick={() => handleTest(profile.id, profile.baseURL, profile.apiKey, profile.model)}
                 >
-                  {testing ? (
+                  {testingProfileId === profile.id ? (
                     <Loader2 className="h-3 w-3 animate-spin mr-1" />
                   ) : null}
                   测试连接
@@ -153,7 +197,7 @@ export function SettingsPage() {
       {showForm ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">添加 API 配置</CardTitle>
+            <CardTitle className="text-base">{editingProfileId ? "编辑 API 配置" : "添加 API 配置"}</CardTitle>
             <CardDescription>
               配置一个 OpenAI 兼容的 API 端点
             </CardDescription>
@@ -225,15 +269,26 @@ export function SettingsPage() {
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
+              <Button variant="outline" onClick={handleCancel}>
                 取消
               </Button>
-              <Button onClick={handleAdd}>添加</Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {editingProfileId ? "保存" : "添加"}
+              </Button>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <Button onClick={() => setShowForm(true)} variant="outline" className="w-full gap-2">
+        <Button
+          onClick={() => {
+            setEditingProfileId(null)
+            setForm(emptyForm)
+            setShowForm(true)
+          }}
+          variant="outline"
+          className="w-full gap-2"
+        >
           <Plus className="h-4 w-4" />
           添加 API 配置
         </Button>

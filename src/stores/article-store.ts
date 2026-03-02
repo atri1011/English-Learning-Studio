@@ -33,11 +33,17 @@ export const useArticleStore = create<ArticleState>()((set, get) => ({
 
   loadArticles: async () => {
     set({ loading: true })
-    const [articles, progressMap] = await Promise.all([
-      getAllArticles(),
-      getAllArticleProgress(),
-    ])
-    set({ articles, progressMap, loading: false })
+    try {
+      const [articles, progressMap] = await Promise.all([
+        getAllArticles(),
+        getAllArticleProgress(),
+      ])
+      set({ articles, progressMap })
+    } catch (error) {
+      console.error("Failed to load articles:", error)
+    } finally {
+      set({ loading: false })
+    }
   },
 
   addArticle: async (title, rawText, sourceType, tags = []) => {
