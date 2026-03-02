@@ -13,6 +13,7 @@ import {
 interface ArticleState {
   articles: Article[]
   loading: boolean
+  loadError: string | null
   tagFilter: string | null
   progressMap: Record<string, ArticleProgress>
   loadArticles: () => Promise<void>
@@ -28,11 +29,12 @@ interface ArticleState {
 export const useArticleStore = create<ArticleState>()((set, get) => ({
   articles: [],
   loading: false,
+  loadError: null,
   tagFilter: null,
   progressMap: {},
 
   loadArticles: async () => {
-    set({ loading: true })
+    set({ loading: true, loadError: null })
     try {
       const [articles, progressMap] = await Promise.all([
         getAllArticles(),
@@ -41,6 +43,7 @@ export const useArticleStore = create<ArticleState>()((set, get) => ({
       set({ articles, progressMap })
     } catch (error) {
       console.error("Failed to load articles:", error)
+      set({ loadError: "加载文章失败，请刷新页面重试" })
     } finally {
       set({ loading: false })
     }

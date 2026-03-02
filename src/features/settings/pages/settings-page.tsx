@@ -62,6 +62,8 @@ export function SettingsPage() {
       setForm(emptyForm)
       setEditingProfileId(null)
       setShowForm(false)
+    } catch {
+      toast.error("保存失败，请重试")
     } finally {
       setSaving(false)
     }
@@ -88,12 +90,17 @@ export function SettingsPage() {
 
   const handleTest = async (profileId: string, baseURL: string, apiKey: string, model: string) => {
     setTestingProfileId(profileId)
-    const result = await testConnection(baseURL, apiKey, model)
-    setTestingProfileId(null)
-    if (result.success) {
-      toast.success("连接成功")
-    } else {
-      toast.error(result.error || "连接失败")
+    try {
+      const result = await testConnection(baseURL, apiKey, model)
+      if (result.success) {
+        toast.success("连接成功")
+      } else {
+        toast.error(result.error || "连接失败")
+      }
+    } catch {
+      toast.error("测试连接异常")
+    } finally {
+      setTestingProfileId(null)
     }
   }
 
@@ -148,8 +155,11 @@ export function SettingsPage() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive"
-                    onClick={() => {
-                      deleteProfile(profile.id)
+                    onClick={async () => {
+                      if (editingProfileId === profile.id) {
+                        handleCancel()
+                      }
+                      await deleteProfile(profile.id)
                       toast.success("已删除")
                     }}
                   >
