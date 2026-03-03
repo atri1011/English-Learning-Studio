@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { supabase, isSupabaseConfigured } from "@/lib/supabase/client"
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import type { User, Session } from "@supabase/supabase-js"
 
 interface AuthState {
@@ -27,11 +27,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     if (get().initialized || !isSupabaseConfigured()) return
     if (authSubscription) return
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const client = getSupabaseClient()
+
+    client.auth.getSession().then(({ data: { session } }) => {
       set({ user: session?.user ?? null, session, initialized: true })
     })
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = client.auth.onAuthStateChange((_event, session) => {
       set({ user: session?.user ?? null, session })
     })
     authSubscription = data.subscription
@@ -40,7 +42,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   signIn: async (email, password) => {
     if (!isSupabaseConfigured()) return { error: "Supabase 未配置" }
     set({ loading: true })
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password })
     set({ loading: false })
     return { error: error?.message ?? null }
   },
@@ -48,7 +50,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   signUp: async (email, password) => {
     if (!isSupabaseConfigured()) return { error: "Supabase 未配置", needsConfirmation: false }
     set({ loading: true })
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await getSupabaseClient().auth.signUp({ email, password })
     set({ loading: false })
     if (error) return { error: error.message, needsConfirmation: false }
     const needsConfirmation = !data.session && !!data.user
@@ -57,14 +59,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   signOut: async () => {
     if (isSupabaseConfigured()) {
-      await supabase.auth.signOut()
+      await getSupabaseClient().auth.signOut()
     }
     set({ user: null, session: null })
   },
 
   resetPassword: async (email) => {
     if (!isSupabaseConfigured()) return { error: "Supabase 未配置" }
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    const { error } = await getSupabaseClient().auth.resetPasswordForEmail(email)
     return { error: error?.message ?? null }
   },
 }))

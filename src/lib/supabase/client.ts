@@ -1,13 +1,27 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./types"
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? ""
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+let supabaseClient: SupabaseClient<Database> | null = null
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl !== "your-project-url")
+  return Boolean(
+    supabaseUrl.trim() &&
+    supabaseAnonKey.trim() &&
+    supabaseUrl !== "your-project-url",
+  )
+}
+
+export function getSupabaseClient(): SupabaseClient<Database> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase 未配置：请设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY")
+  }
+  if (!supabaseClient) {
+    supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey)
+  }
+  return supabaseClient
 }
 
 /**
@@ -18,7 +32,7 @@ export function isSupabaseConfigured(): boolean {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fromTable(table: string): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (supabase as any).from(table)
+  return (getSupabaseClient() as any).from(table)
 }
 
 /**
@@ -27,5 +41,5 @@ export function fromTable(table: string): any {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function rpcCall(fn: string, args: Record<string, unknown>): Promise<{ data: any; error: any }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (supabase as any).rpc(fn, args)
+  return (getSupabaseClient() as any).rpc(fn, args)
 }
