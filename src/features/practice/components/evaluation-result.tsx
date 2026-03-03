@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScoreRadar } from "./score-radar"
 import { DiffList } from "./diff-list"
 import { useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 function gradeLabel(score: number): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } {
@@ -108,14 +108,20 @@ export function EvaluationResult({ attempt, sourceText }: EvaluationResultProps)
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">英文原文</p>
-                  <p className="text-sm font-serif whitespace-pre-wrap leading-relaxed bg-green-500/5 border border-green-500/20 rounded-md p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    英文原文
+                  </p>
+                  <p className="text-sm font-serif whitespace-pre-wrap leading-relaxed bg-muted/50 border border-muted-foreground/10 rounded-md p-3">
                     {sourceText}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">你的回译</p>
-                  <p className="text-sm font-serif whitespace-pre-wrap leading-relaxed bg-blue-500/5 border border-blue-500/20 rounded-md p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    你的回译
+                  </p>
+                  <p className="text-sm font-serif whitespace-pre-wrap leading-relaxed bg-muted/50 border border-muted-foreground/10 rounded-md p-3">
                     {attempt.userTranslation}
                   </p>
                 </div>
