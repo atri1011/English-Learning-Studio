@@ -17,6 +17,7 @@ export default defineConfig({
           vendor: ["react", "react-dom", "react-router-dom"],
           ui: ["radix-ui", "lucide-react", "class-variance-authority", "clsx", "tailwind-merge"],
           db: ["dexie"],
+          supabase: ["@supabase/supabase-js"],
         },
       },
     },

@@ -8,12 +8,36 @@ import { ArticleDetailPage } from "@/features/articles/pages/article-detail-page
 import { VocabularyPage } from "@/features/vocabulary/pages/vocabulary-page"
 import { SettingsPage } from "@/features/settings/pages/settings-page"
 import { PracticePage } from "@/features/practice/pages/practice-page"
+import { LoginPage } from "@/features/auth/pages/login-page"
 import { seedDemoIfNeeded } from "@/lib/db/seed-demo"
+import { useAuthStore } from "@/stores/auth-store"
+import { installSyncHooks } from "@/lib/sync/sync-hooks"
+import { syncEngine } from "@/lib/sync/sync-engine"
+import { isSupabaseConfigured } from "@/lib/supabase/client"
+
+// Install Dexie sync hooks once at module load
+installSyncHooks()
 
 export function App() {
+  const { initialize, user } = useAuthStore()
+
   useEffect(() => {
     seedDemoIfNeeded()
-  }, [])
+    if (isSupabaseConfigured()) {
+      initialize()
+    }
+  }, [initialize])
+
+  // Start/stop sync engine based on auth state
+  useEffect(() => {
+    if (user?.id) {
+      syncEngine.start(user.id)
+    } else {
+      syncEngine.stop()
+    }
+    return () => syncEngine.stop()
+  }, [user?.id])
+
   return (
     <BrowserRouter>
       <TooltipProvider>
@@ -26,6 +50,7 @@ export function App() {
             <Route path="/practice" element={<PracticePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
         <Toaster />
       </TooltipProvider>

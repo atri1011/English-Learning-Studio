@@ -131,3 +131,53 @@ export interface PracticeAttempt {
   isBest: boolean
   createdAt: number
 }
+
+// ── Sync metadata (local-only, added to business tables) ──
+
+export type SyncOp = "INSERT" | "UPDATE" | "DELETE"
+
+export type SyncableTable =
+  | "articles"
+  | "sentences"
+  | "analysisResults"
+  | "apiProfiles"
+  | "vocabulary"
+  | "practiceMaterials"
+  | "practiceAttempts"
+
+export interface SyncQueueItem {
+  id: string
+  tableName: SyncableTable
+  rowId: string
+  op: SyncOp
+  payload: Record<string, unknown>
+  createdAt: number
+  retries: number
+  lastError: string | null
+}
+
+export interface SyncMeta {
+  id: string
+  key: string
+  value: string
+}
+
+export interface SyncShadow {
+  id: string
+  tableName: SyncableTable
+  rowId: string
+  snapshot: Record<string, unknown>
+  version: number
+}
+
+export interface ConflictLogEntry {
+  id: string
+  tableName: SyncableTable
+  rowId: string
+  localVersion: Record<string, unknown>
+  remoteVersion: Record<string, unknown>
+  baseVersion: Record<string, unknown> | null
+  resolution: "local" | "remote" | "merged" | "pending"
+  resolvedData: Record<string, unknown> | null
+  createdAt: number
+}

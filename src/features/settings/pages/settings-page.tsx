@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react"
-import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload, Pencil } from "lucide-react"
+import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload, Pencil, LogOut, RefreshCw } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useSettingsStore } from "@/stores/settings-store"
+import { useAuthStore } from "@/stores/auth-store"
+import { useSyncStore } from "@/stores/sync-store"
 import { testConnection } from "@/lib/api/openai-compatible-client"
 import { exportBackup, downloadBackup, importBackup } from "@/lib/db/backup"
 import { toast } from "sonner"
@@ -115,10 +117,15 @@ export function SettingsPage() {
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">设置</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            配置 OpenAI 兼容的 API 接口
+            账户、API 配置与数据管理
           </p>
         </div>
       </div>
+
+      {/* Account Section */}
+      <AccountSection />
+
+      <Separator className="my-6" />
 
       {/* Existing Profiles */}
       <div className="space-y-3 mb-6">
@@ -365,5 +372,91 @@ export function SettingsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function AccountSection() {
+  const { user, signOut } = useAuthStore()
+  const { status, lastSyncAt, pendingCount, triggerSync } = useSyncStore()
+
+  if (!user) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">账户</CardTitle>
+          <CardDescription>登录后可跨设备同步学习数据</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" asChild>
+            <Link to="/login">登录 / 注册</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const formatTime = (ts: number) => {
+    return new Date(ts).toLocaleString("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base">账户</CardTitle>
+            <CardDescription className="mt-1">{user.email}</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => signOut()}>
+            <LogOut className="h-3.5 w-3.5" />
+            退出
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Separator />
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">同步状态</span>
+          <Badge variant={status === "synced" ? "default" : status === "error" ? "destructive" : "secondary"}>
+            {status === "idle" && "空闲"}
+            {status === "syncing" && "同步中..."}
+            {status === "synced" && "已同步"}
+            {status === "error" && "同步失败"}
+            {status === "offline" && "离线"}
+          </Badge>
+        </div>
+        {lastSyncAt && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">最后同步</span>
+            <span>{formatTime(lastSyncAt)}</span>
+          </div>
+        )}
+        {pendingCount > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">待同步</span>
+            <span>{pendingCount} 项</span>
+          </div>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2"
+          onClick={triggerSync}
+          disabled={status === "syncing"}
+        >
+          {status === "syncing" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="h-3.5 w-3.5" />
+          )}
+          手动同步
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
