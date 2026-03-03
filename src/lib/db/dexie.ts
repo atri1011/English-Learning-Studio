@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from "dexie"
-import type { Article, Sentence, AnalysisResult, ApiProfile, VocabularyEntry } from "@/types/db"
+import type { Article, Sentence, AnalysisResult, ApiProfile, VocabularyEntry, PracticeMaterial, PracticeAttempt } from "@/types/db"
 
 class AppDatabase extends Dexie {
   articles!: EntityTable<Article, "id">
@@ -7,6 +7,8 @@ class AppDatabase extends Dexie {
   analysisResults!: EntityTable<AnalysisResult, "id">
   apiProfiles!: EntityTable<ApiProfile, "id">
   vocabulary!: EntityTable<VocabularyEntry, "id">
+  practiceMaterials!: EntityTable<PracticeMaterial, "id">
+  practiceAttempts!: EntityTable<PracticeAttempt, "id">
 
   constructor() {
     super("EnglishLearningStudio")
@@ -32,6 +34,17 @@ class AppDatabase extends Dexie {
           article.tags = []
         }
       })
+    })
+
+    this.version(3).stores({
+      articles: "&id, updatedAt, status, [status+updatedAt], *tags",
+      sentences: "&id, articleId, [articleId+order]",
+      analysisResults:
+        "&id, &requestHash, articleId, sentenceId, [sentenceId+analysisType], [articleId+analysisType]",
+      apiProfiles: "&id, isActive, name",
+      vocabulary: "&id, normalizedWord, articleId, sentenceId, createdAt",
+      practiceMaterials: "&id, updatedAt, createdAt",
+      practiceAttempts: "&id, materialId, overallScore, createdAt, [materialId+createdAt]",
     })
   }
 }
