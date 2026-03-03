@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react"
-import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload, Pencil, LogOut, RefreshCw } from "lucide-react"
+import { Plus, Trash2, Check, Loader2, ArrowLeft, Download, Upload, Pencil, LogOut, RefreshCw, Server, Lock, Settings2 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { useSettingsStore } from "@/stores/settings-store"
 import { useAuthStore } from "@/stores/auth-store"
 import { useSyncStore } from "@/stores/sync-store"
+import { isEnvProfile } from "@/lib/config/env-profile"
 import { testConnection } from "@/lib/api/openai-compatible-client"
 import { exportBackup, downloadBackup, importBackup } from "@/lib/db/backup"
 import { toast } from "sonner"
@@ -23,6 +25,7 @@ export function SettingsPage() {
     updateProfile,
     deleteProfile,
     setActiveProfile,
+    updateEnvOverrides,
   } = useSettingsStore()
 
   const [showForm, setShowForm] = useState(false)
@@ -30,6 +33,7 @@ export function SettingsPage() {
   const [testingProfileId, setTestingProfileId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [envDialogOpen, setEnvDialogOpen] = useState(false)
   const importRef = useRef<HTMLInputElement>(null)
 
   const emptyForm = {
@@ -38,7 +42,7 @@ export function SettingsPage() {
     apiKey: "",
     model: "",
     temperature: 0.3,
-    maxTokens: 2000,
+    maxTokens: 200000,
   }
 
   const [form, setForm] = useState(emptyForm)
@@ -46,6 +50,9 @@ export function SettingsPage() {
   useEffect(() => {
     loadProfiles()
   }, [loadProfiles])
+
+  const envProfile = profiles.find((p) => isEnvProfile(p.id))
+  const userProfiles = profiles.filter((p) => !isEnvProfile(p.id))
 
   const handleSubmit = async () => {
     if (!form.name || !form.baseURL || !form.apiKey || !form.model) {
@@ -127,9 +134,75 @@ export function SettingsPage() {
 
       <Separator className="my-6" />
 
-      {/* Existing Profiles */}
+      {/* Env Profile Card */}
+      {envProfile && (
+        <div className="space-y-3 mb-3">
+          <Card className={`border-primary/30 bg-primary/5 ${envProfile.id === activeProfileId ? "border-primary/50" : ""}`}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base">{envProfile.name}</CardTitle>
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Server className="h-3 w-3" aria-hidden="true" />
+                    系统预设
+                  </Badge>
+                  {envProfile.id === activeProfileId && (
+                    <Badge variant="default" className="text-xs">使用中</Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {envProfile.id !== activeProfileId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setActiveProfile(envProfile.id)}
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                      启用
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEnvDialogOpen(true)}
+                  >
+                    <Settings2 className="h-3.5 w-3.5 mr-1" />
+                    调整参数
+                  </Button>
+                </div>
+              </div>
+              <CardDescription className="text-xs flex items-center gap-1">
+                <Lock className="h-3 w-3" aria-hidden="true" />
+                由服务器环境变量配置
+                <span className="mx-1">·</span>
+                模型: {envProfile.model} (固定)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Temperature: {envProfile.temperature}</span>
+                <span>Max Tokens: {envProfile.maxTokens}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto text-xs h-7"
+                  disabled={testingProfileId !== null}
+                  onClick={() => handleTest(envProfile.id, envProfile.baseURL, envProfile.apiKey, envProfile.model)}
+                >
+                  {testingProfileId === envProfile.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : null}
+                  测试连接
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* User Profiles */}
       <div className="space-y-3 mb-6">
-        {profiles.map((profile) => (
+        {userProfiles.map((profile) => (
           <Card key={profile.id} className={profile.id === activeProfileId ? "border-primary/50" : ""}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -276,11 +349,11 @@ export function SettingsPage() {
                 <Input
                   type="number"
                   min={100}
-                  max={16000}
+                  max={2000000}
                   step={100}
                   value={form.maxTokens}
                   onChange={(e) =>
-                    setForm({ ...form, maxTokens: parseInt(e.target.value) || 2000 })
+                    setForm({ ...form, maxTokens: parseInt(e.target.value) || 200000 })
                   }
                 />
               </div>
@@ -371,7 +444,84 @@ export function SettingsPage() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Env Profile Settings Dialog */}
+      {envProfile && envDialogOpen && (
+        <EnvProfileSettingsDialog
+          open={envDialogOpen}
+          onOpenChange={setEnvDialogOpen}
+          temperature={envProfile.temperature}
+          maxTokens={envProfile.maxTokens}
+          onSave={(temperature, maxTokens) => {
+            updateEnvOverrides({ temperature, maxTokens })
+            setEnvDialogOpen(false)
+            toast.success("参数已更新")
+          }}
+        />
+      )}
     </div>
+  )
+}
+
+function EnvProfileSettingsDialog({
+  open,
+  onOpenChange,
+  temperature,
+  maxTokens,
+  onSave,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  temperature: number
+  maxTokens: number
+  onSave: (temperature: number, maxTokens: number) => void
+}) {
+  const [tempVal, setTempVal] = useState(temperature)
+  const [tokensVal, setTokensVal] = useState(maxTokens)
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>调整系统预设参数</DialogTitle>
+          <DialogDescription>
+            修改 Temperature 和最大 Tokens，其他参数由环境变量固定。
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Temperature</Label>
+            <Input
+              type="number"
+              min={0}
+              max={2}
+              step={0.1}
+              value={tempVal}
+              onChange={(e) => setTempVal(parseFloat(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>最大 Tokens</Label>
+            <Input
+              type="number"
+              min={100}
+              max={2000000}
+              step={100}
+              value={tokensVal}
+              onChange={(e) => setTokensVal(parseInt(e.target.value) || 200000)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button onClick={() => onSave(tempVal, tokensVal)}>
+            保存
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

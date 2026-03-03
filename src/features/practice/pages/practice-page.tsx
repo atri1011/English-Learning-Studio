@@ -29,7 +29,7 @@ export function PracticePage() {
     clearError,
   } = usePracticeStore()
 
-  const { profiles, loadProfiles } = useSettingsStore()
+  const { profiles, loadProfiles, getActiveProfile } = useSettingsStore()
   const [createOpen, setCreateOpen] = useState(false)
   const [view, setView] = useState<View>("list")
   const [viewingAttempt, setViewingAttempt] = useState<PracticeAttempt | null>(null)
@@ -39,7 +39,7 @@ export function PracticePage() {
     loadProfiles()
   }, [loadMaterials, loadProfiles])
 
-  const hasApiProfile = profiles.length > 0
+  const hasApiProfile = getActiveProfile() !== undefined || profiles.length > 0
   const selectedMaterial = materials.find((m) => m.id === selectedMaterialId)
   const materialAttempts = selectedMaterialId ? attempts[selectedMaterialId] ?? [] : []
 

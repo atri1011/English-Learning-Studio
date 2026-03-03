@@ -10,7 +10,7 @@ import { ArticleImportDialog } from "../components/article-import-dialog"
 export function ArticlesPage() {
   const navigate = useNavigate()
   const { articles, loading, loadArticles, tagFilter, setTagFilter, getAllTags } = useArticleStore()
-  const { profiles, loadProfiles } = useSettingsStore()
+  const { profiles, loadProfiles, getActiveProfile } = useSettingsStore()
   const [importOpen, setImportOpen] = useState(false)
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export function ArticlesPage() {
     loadProfiles()
   }, [loadArticles, loadProfiles])
 
-  const hasApiProfile = profiles.length > 0
+  const hasApiProfile = getActiveProfile() !== undefined || profiles.length > 0
   const allTags = getAllTags()
 
   const filteredArticles = useMemo(() => {

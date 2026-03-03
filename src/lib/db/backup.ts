@@ -1,4 +1,5 @@
 import { db } from "./dexie"
+import { ENV_PROFILE_ID } from "@/lib/config/env-profile"
 
 interface BackupDataV1 {
   version: 1
@@ -89,6 +90,11 @@ export async function importBackup(file: File): Promise<{ articles: number; sent
   const practiceMaterials = backup.version === 3 ? (backup.data as BackupDataV3["data"]).practiceMaterials : []
   const practiceAttempts = backup.version === 3 ? (backup.data as BackupDataV3["data"]).practiceAttempts : []
 
+  const sanitizedApiProfiles = (apiProfiles ?? []).filter((profile) => {
+    if (!profile || typeof profile !== "object") return true
+    return (profile as { id?: unknown }).id !== ENV_PROFILE_ID
+  })
+
   const migratedArticles = (articles ?? []).map((a: unknown) => {
     const article = a as Record<string, unknown>
     return {
@@ -109,7 +115,7 @@ export async function importBackup(file: File): Promise<{ articles: number; sent
     if (migratedArticles.length) await db.articles.bulkAdd(migratedArticles as never[])
     if (sentences?.length) await db.sentences.bulkAdd(sentences as never[])
     if (analysisResults?.length) await db.analysisResults.bulkAdd(analysisResults as never[])
-    if (apiProfiles?.length) await db.apiProfiles.bulkAdd(apiProfiles as never[])
+    if (sanitizedApiProfiles.length) await db.apiProfiles.bulkAdd(sanitizedApiProfiles as never[])
     if (vocabulary?.length) await db.vocabulary.bulkAdd(vocabulary as never[])
     if (practiceMaterials?.length) await db.practiceMaterials.bulkAdd(practiceMaterials as never[])
     if (practiceAttempts?.length) await db.practiceAttempts.bulkAdd(practiceAttempts as never[])
