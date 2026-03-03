@@ -124,6 +124,30 @@ function isoToEpoch(ts: unknown): number {
   return Date.now()
 }
 
+function preserveApiProfileSecret(
+  tableName: SyncableTable,
+  localRow: unknown,
+  remoteData: Record<string, unknown>,
+): void {
+  if (tableName !== "apiProfiles") return
+
+  const localApiKey = typeof (localRow as Record<string, unknown> | undefined)?.apiKey === "string"
+    ? ((localRow as Record<string, unknown>).apiKey as string)
+    : ""
+  const remoteApiKey = typeof remoteData.apiKey === "string" ? remoteData.apiKey : ""
+
+  // Cloud payload never includes plaintext key; keep local secret when present.
+  if (!remoteApiKey && localApiKey) {
+    remoteData.apiKey = localApiKey
+  } else if (remoteData.apiKey == null) {
+    remoteData.apiKey = ""
+  }
+
+  // Defensive cleanup for server-side ciphertext field.
+  delete remoteData.api_key_cipher
+  delete remoteData.apiKeyCipher
+}
+
 /** Exponential backoff with full jitter */
 function backoffMs(retries: number): number {
   const base = 1000
@@ -342,6 +366,7 @@ export class SyncEngine {
     // Remove server-only fields
     delete remoteData.user_id
     delete remoteData.userId
+    preserveApiProfileSecret(localTableName, localRow, remoteData)
 
     if (event.op === "DELETE" || remoteData.deletedAt) {
       if (localRow) {
