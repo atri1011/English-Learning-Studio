@@ -234,7 +234,7 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
       }
 
       const translatedChunks = new Array<string>(sentenceChunks.length)
-      const sentenceTranslationsById: Record<string, string> = {}
+      const sentenceTranslationsById: Record<string, { translationZh: string; literalZh?: string; alignments?: Array<{ id?: number; source: string; target: string; note?: string }> }> = {}
 
       for (let start = 0; start < sentenceChunks.length; start += ARTICLE_TRANSLATION_CHUNK_CONCURRENCY) {
         const batch = sentenceChunks.slice(start, start + ARTICLE_TRANSLATION_CHUNK_CONCURRENCY)
@@ -260,7 +260,7 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
               })
               const parsed = extractJsonObjectFromText(response.content)
 
-              const chunkSentenceMap: Record<string, string> = {}
+              const chunkSentenceMap: Record<string, { translationZh: string; literalZh?: string; alignments?: Array<{ id?: number; source: string; target: string; note?: string }> }> = {}
               const sourceToIndex = new Map<string, number>()
               chunkSentences.forEach((sentence, idx) => {
                 sourceToIndex.set(normalizeSentenceKey(sentence.text), idx)
@@ -273,6 +273,8 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
                     index?: unknown
                     source?: unknown
                     translationZh?: unknown
+                    literalZh?: unknown
+                    alignments?: unknown
                   }
                   const translationZh = typeof row.translationZh === "string"
                     ? row.translationZh.trim()
@@ -291,12 +293,24 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
                   }
 
                   if (index < 0 || index >= chunkSentences.length) continue
-                  chunkSentenceMap[chunkSentences[index].id] = translationZh
+
+                  const literalZh = typeof row.literalZh === "string" ? row.literalZh.trim() || undefined : undefined
+                  const alignments = Array.isArray(row.alignments)
+                    ? (row.alignments as Array<{ id?: number; source: string; target: string; note?: string }>).filter(
+                        (a) => a && typeof a.source === "string" && typeof a.target === "string",
+                      )
+                    : undefined
+
+                  chunkSentenceMap[chunkSentences[index].id] = {
+                    translationZh,
+                    ...(literalZh && { literalZh }),
+                    ...(alignments && alignments.length > 0 && { alignments }),
+                  }
                 }
               }
 
               const fallbackChunkTranslation = chunkSentences
-                .map((s) => chunkSentenceMap[s.id])
+                .map((s) => chunkSentenceMap[s.id]?.translationZh)
                 .filter((text): text is string => typeof text === "string" && text.length > 0)
                 .join("\n")
 
@@ -341,8 +355,8 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
       const sentenceResultsToPersist: AnalysisResult[] = []
       const sentenceResultUpdates: Record<string, AnalysisResult> = {}
       for (const sentence of sentences) {
-        const translationZh = sentenceTranslationsById[sentence.id]
-        if (!translationZh) continue
+        const richData = sentenceTranslationsById[sentence.id]
+        if (!richData) continue
 
         const expectedRequestHash = `${sentence.id}:translation:${profile.model}`
         const existingCandidates = existingBySentence.get(sentence.id) ?? []
@@ -357,7 +371,7 @@ export const useAnalysisStore = create<AnalysisState>()((set, get) => ({
           analysisType: FULL_TRANSLATION_TYPE,
           status: "success",
           model: profile.model,
-          resultJson: { translationZh },
+          resultJson: richData,
           errorMessage: null,
           attempts: 1,
           createdAt: existing?.createdAt ?? now,

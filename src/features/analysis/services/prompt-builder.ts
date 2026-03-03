@@ -219,10 +219,25 @@ Return JSON with this exact format:
     {
       "index": 1,
       "source": "original English sentence",
-      "translationZh": "Chinese translation of this sentence"
+      "translationZh": "natural Chinese translation",
+      "literalZh": "literal/word-by-word Chinese translation",
+      "alignments": [
+        {
+          "id": 1,
+          "source": "English phrase",
+          "target": "Chinese phrase",
+          "note": "explanation if needed"
+        }
+      ]
     }
   ]
 }
+
+Rules for alignments:
+- "id" is a sequential integer starting from 1
+- Break each sentence into meaningful phrase-level chunks covering the entire sentence
+- Each alignment maps an English phrase to its Chinese translation
+- "note" is optional, add only when the translation is non-obvious
 
 Constraints:
 - Translate only the provided segment.

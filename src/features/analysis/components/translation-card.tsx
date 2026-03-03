@@ -302,19 +302,27 @@ export function TranslationCard({ sentence }: TranslationCardProps) {
                   <div
                     key={id}
                     className={cn(
-                      "flex items-start gap-2 rounded-md border px-2 py-1.5 text-sm transition-colors cursor-default",
+                      "rounded-md border px-2 py-1.5 text-sm transition-colors cursor-default",
                       ALIGNMENT_PILL_COLORS[colorIdx],
                       activeAlignmentId === id && "ring-1 ring-foreground/20",
                     )}
                     onMouseEnter={() => setActiveAlignmentId(id)}
                     onMouseLeave={() => setActiveAlignmentId(null)}
                   >
-                    <span className="font-serif text-foreground/80 shrink-0">{a.source}</span>
-                    <span className="text-muted-foreground shrink-0">→</span>
-                    <span className="text-foreground">{a.target}</span>
-                    {a.note && (
-                      <span className="text-xs text-muted-foreground ml-auto shrink-0">({a.note})</span>
-                    )}
+                    <div className="grid w-full grid-cols-[minmax(0,42%)_auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1">
+                      <span className="font-serif text-foreground/80 leading-relaxed break-words [overflow-wrap:anywhere]">
+                        {a.source}
+                      </span>
+                      <span className="text-muted-foreground leading-relaxed">→</span>
+                      <span className="text-foreground leading-relaxed break-words [overflow-wrap:anywhere]">
+                        {a.target}
+                      </span>
+                      {a.note && (
+                        <span className="col-span-3 text-xs text-muted-foreground leading-relaxed break-words [overflow-wrap:anywhere]">
+                          ({a.note})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )
               })}
@@ -472,16 +480,16 @@ function BilingualSentenceList({
               ref={isCurrent ? currentRef : undefined}
               className={cn(
                 "px-3 py-2 cursor-pointer transition-colors hover:bg-muted/30",
-                isCurrent && "bg-primary/5 border-l-2 border-l-primary",
+                isCurrent && "bg-primary/10 border-l-2 border-l-primary",
               )}
               onClick={() => onSelectSentence(s.id)}
             >
-              <p className={cn("text-xs leading-relaxed font-serif", isCurrent ? "text-foreground" : "text-muted-foreground")}>
+              <p className={cn("text-xs leading-relaxed font-serif", isCurrent ? "text-foreground font-medium" : "text-muted-foreground")}>
                 <span className="text-muted-foreground/50 mr-1 text-[10px]">{i + 1}.</span>
                 {s.text}
               </p>
               {translationZh ? (
-                <p className="text-xs leading-relaxed mt-0.5 text-foreground/70">{translationZh}</p>
+                <p className={cn("text-xs leading-relaxed mt-0.5", isCurrent ? "text-primary font-medium" : "text-foreground/70")}>{translationZh}</p>
               ) : (
                 <p className="text-[10px] text-muted-foreground/40 mt-0.5">暂无翻译</p>
               )}
